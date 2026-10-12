@@ -88,7 +88,7 @@ function Header() {
         <div className="flex items-center gap-2">
           <LangToggle />
           <ThemeToggle />
-          <a href={site.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm hidden sm:inline-flex" data-testid="button-resume-header">
+          <a href={site.resumeUrl} download="Tafa_Belli_Brown_Resume.pdf" target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm hidden sm:inline-flex" data-testid="button-resume-header">
             <Download className="h-3.5 w-3.5" /> CV
           </a>
           <button className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface lg:hidden" onClick={() => setOpen((o) => !o)} aria-label={t("menu")} aria-expanded={open} data-testid="button-menu">

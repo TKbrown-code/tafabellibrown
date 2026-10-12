@@ -5,9 +5,9 @@ export const site = {
   name: "Tafa Belli Brown",
   initials: "TB",
   email: "tafabilly73@gmail.com",
-  // Fill these in with your real profile URLs. Empty values are hidden automatically.
-  github: "",
-  linkedin: "",
+
+  github: "https://github.com/TKbrown-code",
+  linkedin: "https://www.linkedin.com/in/tafabilly",
   resumeUrl: import.meta.env.BASE_URL + "Tafa_Belli_Brown_Resume.pdf",
   location: { en: "Jinzhou, Liaoning, China", zh: "中国辽宁锦州" },
   role: { en: "Full-Stack Web Developer", zh: "全栈 Web 开发工程师" },

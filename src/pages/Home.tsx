@@ -14,7 +14,6 @@ function Hero() {
   const { t, pick } = useI18n();
   const scrollTo = useScrollTo();
   const reduce = useReducedMotion();
-  const shots = ["dream-scholarships", "tsogobis", "trucksszone"];
 
   return (
     <section className="relative overflow-hidden">
@@ -46,7 +45,7 @@ function Hero() {
               <button className="btn-primary" onClick={() => scrollTo("projects")} data-testid="button-view-projects">
                 {t("cta_projects")} <ArrowRight className="h-4 w-4" />
               </button>
-              <a className="btn-ghost" href={site.resumeUrl} target="_blank" rel="noopener noreferrer" data-testid="button-download-resume">
+              <a className="btn-ghost" download="Tafa_Belli_Brown_Resume.pdf" href={site.resumeUrl} target="_blank" rel="noopener noreferrer" data-testid="button-download-resume">
                 <Download className="h-4 w-4" /> {t("cta_resume")}
               </a>
             </div>
@@ -64,26 +63,19 @@ function Hero() {
         </div>
 
         {/* Stacked live-project screenshots */}
-        <div className="relative mx-auto aspect-[5/4] w-full max-w-[560px]" aria-hidden>
-          {shots.map((s, i) => (
-            <motion.div
-              key={s}
-              initial={reduce ? false : { opacity: 0, y: 30, rotate: 0 }}
-              animate={{ opacity: 1, y: 0, rotate: [-5, 3, -1][i] }}
-              transition={{ duration: 0.9, delay: 0.2 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute overflow-hidden rounded-xl border border-border bg-surface shadow-lift"
-              style={{ width: "78%", left: ["0%", "22%", "10%"][i], top: ["2%", "18%", "40%"][i], zIndex: i + 1 }}
-            >
-              <div className="flex items-center gap-1.5 border-b border-border bg-surface-2 px-3 py-2">
-                <span className="h-2 w-2 rounded-full bg-faint/50" />
-                <span className="h-2 w-2 rounded-full bg-faint/50" />
-                <span className="h-2 w-2 rounded-full bg-faint/50" />
-                <span className="ml-2 truncate font-mono text-[10px] text-faint">{s === "dream-scholarships" ? "dream-scholarships.com" : `${s}.com`}</span>
-              </div>
-              <img src={assetUrl(`projects/${s}.jpg`)} alt="" className="aspect-[16/10] w-full object-cover object-top" loading={i === 0 ? "eager" : "lazy"} />
-            </motion.div>
-          ))}
+        <div className="relative mx-auto mt-28 aspect-[5/4] w-full max-w-[560px]" aria-label="Featured portfolio projects">
+        <div className="absolute inset-0 rounded-[2rem] border border-border bg-surface shadow-soft ring-1 ring-border/80" />
+        <div className="absolute inset-x-0 bottom-0 h-[150%]" style={{ clipPath: "inset(-100% 0 0 0 round 0 0 2rem 2rem)" }}>
+        <motion.img
+          className="h-full w-full object-cover object-bottom"
+          src="/images/me.png"
+          alt="Tafa Belli Brown, full-stack developer"
+          initial={reduce ? false : { scale: 0.96, opacity: 0, y: 14 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
         </div>
+      </div>
       </div>
     </section>
   );
