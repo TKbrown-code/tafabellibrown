@@ -1,0 +1,38 @@
+{
+  "name": "tafa-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:preview": "tsc -b && VITE_ROUTER=hash vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "seed:sql": "esbuild scripts/gen-seed.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=node_modules/.tmp/gen.mjs --log-level=warning && node node_modules/.tmp/gen.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
+    "@tanstack/react-query": "^5.104.2",
+    "clsx": "^2.1.1",
+    "framer-motion": "^14.1.0",
+    "lucide-react": "^1.55.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.30.6",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
+    "@types/node": "^20.19.43",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.4"
+  }
+}
