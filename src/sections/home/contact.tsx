@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Check, Copy, Mail, Send } from "lucide-react";
+import { Check, CheckCircle2, Copy, Mail, Send } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useSendMessage } from "@/lib/api";
 import { site } from "@/data/site";
-import { Reveal } from "@/components/ui";
-import { Socials } from "@/components/Layout";
+import { Reveal } from "@/components/shared/ui";
+import { Socials } from "@/components/shared/Layout";
+import { useModal } from "@/hooks/useModal";
 
 export function Contact() {
   const { t } = useI18n();
@@ -12,6 +13,9 @@ export function Contact() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", body: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+  const { showModal } = useModal();
+
+  console.log(send);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -25,7 +29,16 @@ export function Contact() {
   const submit = (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
-    send.mutate(form, { onSuccess: () => setForm({ name: "", email: "", subject: "", body: "" }) });
+    send.mutate(form, {
+      onSuccess: () => {
+        setForm({ name: "", email: "", subject: "", body: "" });
+        showModal({
+          type: "success",
+          title: "Message sent successfully!",
+          description: t("f_sent"),
+        });
+      },
+    });
   };
 
   const copy = async () => {
@@ -83,8 +96,6 @@ export function Contact() {
               <button type="submit" className="btn-primary" disabled={send.isPending} data-testid="button-send">
                 <Send className="h-4 w-4" /> {send.isPending ? t("f_sending") : t("f_send")}
               </button>
-              {send.isSuccess && <p className="text-sm text-success" role="status" data-testid="status-sent">{t("f_sent")}</p>}
-              {send.isError && <p className="text-sm text-danger" role="alert">{t("f_error")}</p>}
             </div>
           </form>
         </Reveal>

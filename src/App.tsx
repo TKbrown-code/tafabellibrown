@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, type ReactNode } from "react";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
-import { Layout } from "@/components/Layout";
+import { Layout } from "@/components/shared/Layout";
 import Home from "@/pages/Home";
 import {ProjectPage} from "@/pages/ProjectPage";
 import { BlogIndex } from "@/pages/blog";

@@ -1,7 +1,7 @@
 import { Briefcase, Check, GraduationCap } from "lucide-react";
 import { useI18n} from "@/lib/i18n";
 import { site } from "@/data/site";
-import { Reveal } from "@/components/ui";
+import { Reveal } from "@/components/shared/ui";
 
 export function Experience() {
   const { t, pick } = useI18n();

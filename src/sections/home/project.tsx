@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Autoplay from 'embla-carousel-autoplay'
 import { useI18n } from "@/lib/i18n";
 import { useProjects } from "@/lib/api";
-import { Reveal, Skeleton } from "@/components/ui";
+import { Reveal, Skeleton } from "@/components/shared/ui";
 import { ProjectCard } from "@/sections/home/projectCards";
 
 export function Projects() {

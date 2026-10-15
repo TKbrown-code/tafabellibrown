@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { Project} from "@/lib/types";
-import { ExternalLink, assetUrl } from "@/components/ui";
+import { ExternalLink, assetUrl } from "@/components/shared/ui";
 
 
 export function ProjectCard({ p, index }: { p: Project; index: number }) {

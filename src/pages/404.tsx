@@ -1,6 +1,6 @@
 import { Link} from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
-import { useTitle } from "../components/Layout"
+import { useTitle } from "../components/shared/Layout"
 
 export function NotFound() {
   const { t } = useI18n();

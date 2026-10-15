@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { usePosts } from "@/lib/api";
-import { Reveal, Skeleton, formatDate } from "@/components/ui";
+import { Reveal, Skeleton, formatDate } from "@/components/shared/ui";
 
 export function BlogPreview() {
   const { t, loc, lang } = useI18n();

@@ -1,8 +1,8 @@
 import { GraduationCap, Languages, MapPin} from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { site } from "@/data/site"
-import { Reveal, } from "@/components/ui";
-import { Fact } from "@/components/fact";
+import { Reveal, } from "@/components/shared/ui";
+import { Fact } from "@/components/shared/fact";
 
 function About() {
   const { t, pick } = useI18n();

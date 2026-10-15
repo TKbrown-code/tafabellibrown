@@ -3,9 +3,7 @@ import { supabase } from "./supabase";
 import type { Message, NewMessage, Post, Project, Skill } from "./types";
 import { seedPosts, seedProjects, seedSkills } from "@/data/seed";
 
-/* ------------------------------------------------------------------ */
-/* Demo store — used when Supabase isn't configured (in-memory only). */
-/* ------------------------------------------------------------------ */
+
 const demo = {
   projects: structuredClone(seedProjects) as Project[],
   posts: structuredClone(seedPosts) as Post[],
@@ -22,6 +20,7 @@ const demo = {
     },
   ] as Message[],
 };
+
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 
@@ -35,6 +34,7 @@ async function list<T extends Row>(table: Table, opts: { admin?: boolean } = {})
     if (!opts.admin && (table === "projects" || table === "posts")) rows = rows.filter((r) => (r as unknown as { published: boolean }).published);
     return sortRows(table, [...rows]);
   }
+  
   let q = supabase.from(table).select("*");
   if (table === "projects" || table === "skills") q = q.order("sort_order", { ascending: true });
   if (table === "posts") q = q.order("published_at", { ascending: false });
