@@ -5,16 +5,15 @@ import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
+import {ProjectPage} from "@/pages/ProjectPage";
+import { BlogIndex } from "@/pages/blog";
+import { PostPage } from "@/pages/postPage";
+import {NotFound} from "@/pages/404";
 
 const Admin = lazy(() => import("@/admin/Admin"));
-const content = () => import("@/pages/Content");
-const ProjectPage = lazy(() => content().then((m) => ({ default: m.ProjectPage })));
-const BlogIndex = lazy(() => content().then((m) => ({ default: m.BlogIndex })));
-const PostPage = lazy(() => content().then((m) => ({ default: m.PostPage })));
-const NotFound = lazy(() => content().then((m) => ({ default: m.NotFound })));
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, refetchOnWindowFocus: false } } });
 
-// Hash routing for sandboxed previews; clean browser URLs in production (see vercel.json rewrites).
+// clean browser URLs in production (see vercel.json rewrites).
 const Router = import.meta.env.VITE_ROUTER === "hash" ? HashRouter : BrowserRouter;
 
 function Shell({ children }: { children: ReactNode }) {

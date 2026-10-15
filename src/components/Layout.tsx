@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Menu, Moon, Sun, X } from "lucide-react";
+import { ArrowLeft, Download, Menu, Moon, Sun, X } from "lucide-react";
 import { useI18n, type DictKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { site } from "@/data/site";
@@ -174,5 +174,22 @@ export function Layout({ children }: { children: ReactNode }) {
       <main id="main" tabIndex={-1} className="flex-1 outline-hidden">{children}</main>
       <Footer />
     </div>
+  );
+}
+
+
+export const prose = "prose prose-neutral max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-strong:text-ink prose-li:marker:text-accent prose-code:before:content-none prose-code:after:content-none prose-code:rounded-sm prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-pre:bg-[hsl(224_30%_10%)] prose-pre:border prose-pre:border-border";
+
+export function useTitle(title?: string) {
+  useEffect(() => {
+    document.title = title ? `${title} | ${site.name}` : `${site.name} — Full-Stack Web Developer`;
+  }, [title]);
+}
+
+export function Back({ to = "/", label }: { to?: string; label: string }) {
+  return (
+    <Link to={to} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink" data-testid="link-back">
+      <ArrowLeft className="h-4 w-4" /> {label}
+    </Link>
   );
 }

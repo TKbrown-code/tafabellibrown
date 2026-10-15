@@ -1,30 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { usePosts, useProjects } from "@/lib/api";
-import { site } from "@/data/site";
-import { ExternalLink, GithubIcon, Reveal, Skeleton, assetUrl, formatDate } from "@/components/ui";
+import { useProjects } from "@/lib/api";
+import { ExternalLink, GithubIcon, Reveal, Skeleton, assetUrl } from "@/components/ui";
+import {useTitle, Back, prose} from "../components/Layout"
+import { NotFound } from "./404";
 
-const prose = "prose prose-neutral max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-strong:text-ink prose-li:marker:text-accent prose-code:before:content-none prose-code:after:content-none prose-code:rounded-sm prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-pre:bg-[hsl(224_30%_10%)] prose-pre:border prose-pre:border-border";
-
-function useTitle(title?: string) {
-  useEffect(() => {
-    document.title = title ? `${title} | ${site.name}` : `${site.name} — Full-Stack Web Developer`;
-  }, [title]);
-}
-
-function Back({ to = "/", label }: { to?: string; label: string }) {
-  return (
-    <Link to={to} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink" data-testid="link-back">
-      <ArrowLeft className="h-4 w-4" /> {label}
-    </Link>
-  );
-}
-
-/* ----------------------------- Case study ---------------------------- */
 export function ProjectPage() {
   const { slug } = useParams();
   const { t, loc } = useI18n();
@@ -111,68 +94,5 @@ export function ProjectPage() {
         </Link>
       )}
     </article>
-  );
-}
-
-/* -------------------------------- Blog ------------------------------- */
-export function BlogIndex() {
-  const { t, loc, lang } = useI18n();
-  const { data, isLoading } = usePosts();
-  useTitle(t("nav_blog"));
-  return (
-    <div className="container max-w-3xl py-14">
-      <Back label={t("back_home")} />
-      <p className="kicker mt-10">{t("blog_kicker")}</p>
-      <h1 className="mt-3 text-4xl font-extrabold md:text-5xl">{t("blog_title")}</h1>
-      <div className="mt-12 divide-y divide-border border-y border-border">
-        {isLoading && <Skeleton className="my-6 h-24" />}
-        {data?.length === 0 && <p className="py-10 text-muted">No posts yet.</p>}
-        {data?.map((p) => (
-          <Link key={p.id} to={`/blog/${p.slug}`} className="group block py-7" data-testid={`link-post-${p.slug}`}>
-            <p className="font-mono text-xs text-faint">{formatDate(p.published_at, lang)} · {p.reading_minutes} {t("min_read")}</p>
-            <h2 className="mt-2 text-2xl font-bold transition-colors group-hover:text-accent">{loc(p.title, p.title_zh)}</h2>
-            <p className="mt-2 text-muted">{loc(p.excerpt, p.excerpt_zh)}</p>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function PostPage() {
-  const { slug } = useParams();
-  const { t, loc, lang } = useI18n();
-  const { data, isLoading } = usePosts();
-  const p = data?.find((x) => x.slug === slug);
-  useTitle(p?.title);
-  if (isLoading) return <div className="container max-w-3xl py-20"><Skeleton className="h-96" /></div>;
-  if (!p) return <NotFound />;
-  return (
-    <article className="container max-w-3xl py-14">
-      <Back to="/blog" label={t("all_posts")} />
-      <header className="mt-10">
-        <p className="font-mono text-xs text-faint">{formatDate(p.published_at, lang)} · {p.reading_minutes} {t("min_read")}</p>
-        <h1 className="mt-3 text-4xl font-extrabold leading-[1.08] md:text-5xl" data-testid="text-post-title">{loc(p.title, p.title_zh)}</h1>
-        <p className="mt-5 text-lg text-muted">{loc(p.excerpt, p.excerpt_zh)}</p>
-        <div className="mt-6 flex flex-wrap gap-1.5">{p.tags.map((tg) => <span key={tg} className="chip">{tg}</span>)}</div>
-      </header>
-      <div className={`${prose} mt-12 border-t border-border pt-10`}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{loc(p.content, p.content_zh)}</ReactMarkdown>
-      </div>
-    </article>
-  );
-}
-
-export function NotFound() {
-  const { t } = useI18n();
-  useTitle(t("not_found"));
-  return (
-    <div className="container grid min-h-[60vh] place-items-center py-20 text-center">
-      <div>
-        <p className="font-mono text-sm text-accent">404</p>
-        <h1 className="mt-3 text-4xl font-extrabold">{t("not_found")}</h1>
-        <Link to="/" className="btn-primary mt-8">{t("back_home")}</Link>
-      </div>
-    </div>
   );
 }
