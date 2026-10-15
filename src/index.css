@@ -1,6 +1,116 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1200px) {
+    max-width: 1200px;
+  }
+}
+
+@theme {
+  --color-bg: hsl(var(--bg));
+  --color-surface: hsl(var(--surface));
+  --color-surface-2: hsl(var(--surface-2));
+  --color-border: hsl(var(--border));
+  --color-ink: hsl(var(--ink));
+  --color-muted: hsl(var(--muted));
+  --color-faint: hsl(var(--faint));
+  --color-accent: hsl(var(--accent));
+  --color-accent-hover: hsl(var(--accent-hover));
+  --color-accent-soft: hsl(var(--accent-soft));
+  --color-accent-ink: hsl(var(--accent-ink));
+  --color-success: hsl(var(--success));
+  --color-danger: hsl(var(--danger));
+
+  --font-display: 'Cabinet Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+  --font-sans: 'Satoshi', 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+
+  --shadow-soft:
+    0 1px 2px hsl(var(--shadow) / 0.06),
+    0 8px 24px -12px hsl(var(--shadow) / 0.14);
+  --shadow-lift:
+    0 2px 4px hsl(var(--shadow) / 0.06),
+    0 20px 40px -16px hsl(var(--shadow) / 0.22);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility section {
+  @apply py-20 md:py-28;
+  scroll-margin-top: 4.5rem;
+}
+
+@utility kicker {
+  @apply font-mono text-xs uppercase tracking-[0.14em] text-accent;
+}
+
+@utility h-section {
+  @apply mt-3 font-display text-3xl font-bold leading-[1.1] md:text-[2.75rem];
+}
+
+@utility card {
+  @apply rounded-2xl border border-border bg-surface shadow-soft;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-[background,color,box-shadow,transform] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60;
+}
+
+@utility btn-primary {
+  @apply btn bg-accent text-accent-ink hover:bg-accent-hover shadow-soft;
+}
+
+@utility btn-ghost {
+  @apply btn border border-border bg-surface text-ink hover:border-ink/30;
+}
+
+@utility btn-sm {
+  @apply px-3.5 py-1.5 text-xs;
+}
+
+@utility chip {
+  @apply inline-flex items-center rounded-full border border-border bg-surface-2/60 px-3 py-1 text-xs font-medium text-muted;
+}
+
+@utility input {
+  @apply w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-hidden focus:ring-4 focus:ring-accent/10;
+}
+
+@utility label {
+  @apply mb-1.5 block text-xs font-medium text-muted;
+}
+
+@utility link {
+  @apply underline decoration-border underline-offset-4 transition-colors hover:decoration-accent hover:text-accent;
+}
 
 @layer base {
   :root {
@@ -47,19 +157,4 @@
     html { scroll-behavior: auto; }
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
-}
-
-@layer components {
-  .section { @apply py-20 md:py-28; scroll-margin-top: 4.5rem; }
-  .kicker { @apply font-mono text-xs uppercase tracking-[0.14em] text-accent; }
-  .h-section { @apply mt-3 font-display text-3xl font-bold leading-[1.1] md:text-[2.75rem]; }
-  .card { @apply rounded-2xl border border-border bg-surface shadow-soft; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-[background,color,box-shadow,transform] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60; }
-  .btn-primary { @apply btn bg-accent text-accent-ink hover:bg-accent-hover shadow-soft; }
-  .btn-ghost { @apply btn border border-border bg-surface text-ink hover:border-ink/30; }
-  .btn-sm { @apply px-3.5 py-1.5 text-xs; }
-  .chip { @apply inline-flex items-center rounded-full border border-border bg-surface-2/60 px-3 py-1 text-xs font-medium text-muted; }
-  .input { @apply w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10; }
-  .label { @apply mb-1.5 block text-xs font-medium text-muted; }
-  .link { @apply underline decoration-border underline-offset-4 transition-colors hover:decoration-accent hover:text-accent; }
 }

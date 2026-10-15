@@ -11,7 +11,7 @@ function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 [background-image:radial-gradient(hsl(var(--border))_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_70%_30%,black,transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)] bg-size-[22px_22px] mask-[radial-gradient(ellipse_at_70%_30%,black,transparent_70%)]" />
       <div className="container grid items-center gap-14 pb-20 pt-14 md:pt-20 lg:grid-cols-[1.1fr_1fr] lg:pb-28">
         <div>
           <Reveal>
@@ -57,8 +57,8 @@ function Hero() {
         </div>
 
         {/* Stacked live-project screenshots */}
-        <div className="relative mx-auto mt-28 aspect-[5/4] w-full max-w-[560px]" aria-label="Featured portfolio projects">
-        <div className="absolute inset-0 rounded-[2rem] border border-border bg-surface shadow-soft ring-1 ring-border/80" />
+        <div className="relative mx-auto mt-28 aspect-5/4 w-full max-w-[560px]" aria-label="Featured portfolio projects">
+        <div className="absolute inset-0 rounded-4xl border border-border bg-surface shadow-soft ring-1 ring-border/80" />
         <div className="absolute inset-x-0 bottom-0 h-[150%]" style={{ clipPath: "inset(-100% 0 0 0 round 0 0 2rem 2rem)" }}>
         <motion.img
           className="h-full w-full object-cover object-bottom"
