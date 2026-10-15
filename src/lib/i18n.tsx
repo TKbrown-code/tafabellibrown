@@ -63,7 +63,7 @@ const dict = {
   f_message: { en: "Message", zh: "留言" },
   f_send: { en: "Send message", zh: "发送留言" },
   f_sending: { en: "Sending…", zh: "发送中…" },
-  f_sent: { en: "Thanks — your message is on its way. I'll reply soon.", zh: "感谢留言，我会尽快回复。" },
+  f_sent: { en: "Thank you for reaching out. I'll review your message and get back to you as soon as possible.", zh: "感谢您与我联系。我会查看您的留言，并尽快回复。" },
   f_error: { en: "Something went wrong. Please email me directly.", zh: "发送失败，请直接发送邮件联系我。" },
   f_required: { en: "Required", zh: "必填" },
   f_invalid_email: { en: "Enter a valid email", zh: "请输入有效的邮箱" },

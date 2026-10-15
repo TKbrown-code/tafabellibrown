@@ -4,8 +4,8 @@ import remarkGfm from "remark-gfm";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useProjects } from "@/lib/api";
-import { ExternalLink, GithubIcon, Reveal, Skeleton, assetUrl } from "@/components/ui";
-import {useTitle, Back, prose} from "../components/Layout"
+import { ExternalLink, GithubIcon, Reveal, Skeleton, assetUrl } from "@/components/shared/ui";
+import {useTitle, Back, prose} from "../components/shared/Layout"
 import { NotFound } from "./404";
 
 export function ProjectPage() {

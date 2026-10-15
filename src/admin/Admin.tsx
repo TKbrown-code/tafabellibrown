@@ -6,8 +6,8 @@ import { ArrowLeft, Eye, EyeOff, FileText, FolderKanban, Inbox, Loader2, LogOut,
 import { supabase, isDemo } from "@/lib/supabase";
 import { useAdminDelete, useAdminList, useAdminSave } from "@/lib/api";
 import type { Message, Metric, Post, Project, Skill, SkillCategory } from "@/lib/types";
-import { Logo, assetUrl, formatDate } from "@/components/ui";
-import { ThemeToggle } from "@/components/Layout";
+import { Logo, assetUrl, formatDate } from "@/components/shared/ui";
+import { ThemeToggle } from "@/components/shared/Layout";
 
 /* ------------------------------- Auth -------------------------------- */
 function useAuth() {

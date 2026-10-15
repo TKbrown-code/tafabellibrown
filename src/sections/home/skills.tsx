@@ -2,7 +2,7 @@ import { useI18n, type DictKey } from "@/lib/i18n";
 import { useSkills } from "@/lib/api";
 import { site } from "@/data/site";
 import type {  SkillCategory } from "@/lib/types";
-import { Reveal, Skeleton } from "@/components/ui";
+import { Reveal, Skeleton } from "@/components/shared/ui";
 
 
 const CATS: { id: SkillCategory; key: DictKey }[] = [

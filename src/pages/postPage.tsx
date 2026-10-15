@@ -3,8 +3,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useI18n } from "@/lib/i18n";
 import { usePosts } from "@/lib/api";
-import { Skeleton, formatDate } from "@/components/ui";
-import { useTitle, Back, prose } from "@/components/Layout";
+import { Skeleton, formatDate } from "@/components/shared/ui";
+import { useTitle, Back, prose } from "@/components/shared/Layout";
 import { NotFound } from "./404"
 
 export function PostPage() {

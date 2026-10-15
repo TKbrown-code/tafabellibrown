@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Download } from "lucide-react";
 import { useI18n,} from "@/lib/i18n"
 import { site } from "@/data/site";
-import { Reveal, useScrollTo } from "@/components/ui";
+import { Reveal, useScrollTo } from "@/components/shared/ui";
 
 function Hero() {
   const { t, pick } = useI18n();
