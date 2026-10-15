@@ -75,5 +75,3 @@ The anon key is safe in the browser — row-level security only lets the public 
 - Add your GitHub and LinkedIn URLs in `src/data/site.ts` (icons appear automatically).
 - Review the two starter blog posts in `/admin` → Blog and edit them in your own voice.
 - Optional: add a profile photo, custom domain, and Supabase email notifications (Database Webhook → Edge Function) for new messages.
-
-dbpws:  xG4K7AJrEhxJdiah
