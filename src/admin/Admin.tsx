@@ -95,7 +95,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${checked ? "bg-accent" : "bg-border"}`}>
-        <span className={`absolute left-0 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
+        <span className={`absolute left-0 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </button>
       {label}
     </label>
@@ -283,7 +283,7 @@ function SkillsPanel() {
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin text-faint" /> : data?.filter((s) => s.category === c).map((s) => (
                 <span key={s.id} className="inline-flex items-center gap-1 rounded-lg bg-surface-2 py-1 pl-2.5 pr-1 text-sm">
                   {s.name}
-                  <button onClick={() => del.mutate(s.id)} className="grid h-5 w-5 place-items-center rounded text-faint hover:bg-border hover:text-danger" aria-label={`Remove ${s.name}`}><X className="h-3 w-3" /></button>
+                  <button onClick={() => del.mutate(s.id)} className="grid h-5 w-5 place-items-center rounded-sm text-faint hover:bg-border hover:text-danger" aria-label={`Remove ${s.name}`}><X className="h-3 w-3" /></button>
                 </span>
               ))}
             </div>

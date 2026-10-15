@@ -16,7 +16,7 @@ export function Experience() {
           {site.experience.map((e) => (
             <Reveal key={e.title.en}>
               <div className="relative border-l border-border pl-8">
-                <span className="absolute -left-[13px] top-0 grid h-6 w-6 place-items-center rounded-full border border-border bg-surface text-accent">
+                <span className="absolute left-[-13px] top-0 grid h-6 w-6 place-items-center rounded-full border border-border bg-surface text-accent">
                   <Briefcase className="h-3 w-3" />
                 </span>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -37,7 +37,7 @@ export function Experience() {
           ))}
           <Reveal>
             <div className="relative border-l border-dashed border-border pl-8">
-              <span className="absolute -left-[13px] top-0 grid h-6 w-6 place-items-center rounded-full border border-border bg-surface text-accent">
+              <span className="absolute left-[-13px] top-0 grid h-6 w-6 place-items-center rounded-full border border-border bg-surface text-accent">
                 <GraduationCap className="h-3 w-3" />
               </span>
               <div className="flex flex-wrap items-baseline justify-between gap-2">

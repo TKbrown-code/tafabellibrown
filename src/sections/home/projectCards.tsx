@@ -13,7 +13,7 @@ export function ProjectCard({ p, index }: { p: Project; index: number }) {
     <article className="card group grid overflow-hidden md:grid-cols-2" data-testid={`card-project-${p.slug}`}>
       <Link to={`/projects/${p.slug}`} className={`relative block overflow-hidden bg-surface-2 ${flip ? "md:order-2" : ""}`} aria-label={loc(p.title, p.title_zh)}>
         {p.cover_url && (
-          <img src={assetUrl(p.cover_url)} alt={`${p.title} screenshot`} loading="lazy" className="aspect-[16/10] h-full w-full object-cover object-left-top transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+          <img src={assetUrl(p.cover_url)} alt={`${p.title} screenshot`} loading="lazy" className="aspect-16/10 h-full w-full object-cover object-top-left transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
         )}
       </Link>
       <div className="flex flex-col p-7 md:p-9">
