@@ -3,7 +3,6 @@ import {
   CircleAlert,
   Info,
   TriangleAlert,
-  X,
 } from "lucide-react";
 
 import {
