@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, CheckCircle2, Copy, Mail, Send } from "lucide-react";
+import { Check, Copy, Mail, Send } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useSendMessage } from "@/lib/api";
 import { site } from "@/data/site";
