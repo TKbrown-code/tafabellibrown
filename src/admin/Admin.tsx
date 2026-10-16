@@ -10,6 +10,9 @@ import { Logo, assetUrl, formatDate } from "@/components/shared/ui";
 import { ThemeToggle } from "@/components/shared/Layout";
 
 /* ------------------------------- Auth -------------------------------- */
+// The in-memory demo admin is only for local dev and sandboxed previews, never a production deploy.
+const demoAdminAllowed = import.meta.env.DEV || import.meta.env.VITE_ROUTER === "hash";
+
 function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [demoUser, setDemoUser] = useState(false);
@@ -378,10 +381,21 @@ type Tab = "messages" | "projects" | "posts" | "skills";
 export default function Admin() {
   const auth = useAuth();
   const [tab, setTab] = useState<Tab>("messages");
-  const messages = useAdminList<Message>("messages");
+  const messages = useAdminList<Message>("messages", !!auth.user);
   const unread = useMemo(() => messages.data?.filter((m) => !m.is_read).length ?? 0, [messages.data]);
   useEffect(() => { document.title = "Admin | Tafa Belli Brown"; }, []);
 
+  if (isDemo && !demoAdminAllowed) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-bg px-4 text-center">
+        <div>
+          <h1 className="font-sans text-xl font-bold">Admin unavailable</h1>
+          <p className="mt-2 text-sm text-muted">Supabase is not configured for this deployment.</p>
+          <Link to="/" className="btn-ghost btn-sm mt-6">Back to site</Link>
+        </div>
+      </div>
+    );
+  }
   if (!auth.ready) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-faint" /></div>;
   if (!auth.user) return <Login onSignIn={auth.signIn} />;
 

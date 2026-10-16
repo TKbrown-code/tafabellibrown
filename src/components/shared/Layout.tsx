@@ -178,7 +178,7 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 
-export const prose = "prose prose-neutral max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-strong:text-ink prose-li:marker:text-accent prose-code:before:content-none prose-code:after:content-none prose-code:rounded-sm prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-pre:bg-[hsl(224_30%_10%)] prose-pre:border prose-pre:border-border";
+export const prose = "prose prose-neutral max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-strong:text-ink prose-li:marker:text-accent prose-code:before:content-none prose-code:after:content-none prose-code:rounded-sm prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-pre:bg-[hsl(224_30%_10%)] prose-pre:border prose-pre:border-border [&_pre_code]:bg-transparent [&_pre_code]:p-0";
 
 export function useTitle(title?: string) {
   useEffect(() => {

@@ -25,8 +25,6 @@ export function Projects() {
   const updateCarousel = useCallback(() => {
     if (!emblaApi) return;
 
-    emblaApi.plugins().autoplay?.play()
-
     setSelectedIndex(emblaApi.selectedScrollSnap());
     setSnapCount(emblaApi.scrollSnapList().length);
     setCanScrollPrev(emblaApi.canScrollPrev());
