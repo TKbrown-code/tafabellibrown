@@ -8,16 +8,16 @@ Personal portfolio and CMS built with **React + TypeScript (Vite)**, **Tailwind 
 - Case-study page per project (`/projects/:slug`) and a blog (`/blog`, `/blog/:slug`) written in Markdown
 - English / 中文 language toggle (UI strings and all content fields)
 - Light / dark theme (follows the system, remembers your choice)
-- Downloadable résumé (`public/resume`)
+- Downloadable résumé (`public/Tafa_Belli_Brown_Resume.pdf`)
 - Contact form → stored in Supabase `messages`
 - Admin CMS at `/admin` (Supabase Auth): inbox, projects, blog posts, skills
-- **Demo mode**: with no Supabase env vars, the site runs on seed data in memory (admin password: `demo`)
+- **Demo mode**: with no Supabase env vars, the site runs on seed data in memory. The demo admin (password: `demo`) is only enabled in `npm run dev` and `build:preview`; production builds show "Admin unavailable" instead
 
 ## Stack
 
 | Layer    | Choice |
 | -------- | ------ |
-| UI       | React 18, TypeScript, Tailwind CSS 3, Framer Motion, lucide-react |
+| UI       | React 18, TypeScript, Tailwind CSS 4, Framer Motion, lucide-react |
 | Data     | Supabase (Postgres + Auth + RLS) via `@supabase/supabase-js`, TanStack Query |
 | Routing  | React Router (browser routing in production, hash routing for sandboxed previews) |
 | Hosting  | Vercel (`vercel.json` rewrites all routes to `index.html`) |
@@ -31,8 +31,8 @@ src/
   lib/api.ts        ← data layer: Supabase or in-memory demo store
   lib/i18n.tsx      ← EN/中文 dictionary + language context
   lib/theme.tsx     ← light/dark theme
-  pages/Home.tsx    ← all home sections
-  pages/Content.tsx ← case study, blog index, blog post, 404
+  pages/            ← Home, ProjectPage, blog, postPage, 404
+  sections/home/    ← hero, about, skills, projects, experience, blog preview, contact
   admin/Admin.tsx   ← CMS (login, messages, projects, posts, skills)
 supabase/
   schema.sql        ← tables + row-level security
@@ -43,7 +43,7 @@ supabase/
 
 ```bash
 npm install
-cp .env.example .env.local   # optional — leave empty to use demo mode
+# optional: create .env.local with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (leave out to use demo mode)
 npm run dev
 ```
 

@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Download } from "lucide-react";
 import { useI18n,} from "@/lib/i18n"
 import { site } from "@/data/site";
-import { Reveal, useScrollTo } from "@/components/shared/ui";
+import { Reveal, assetUrl, useScrollTo } from "@/components/shared/ui";
 
 function Hero() {
   const { t, pick } = useI18n();
@@ -62,7 +62,7 @@ function Hero() {
         <div className="absolute inset-x-0 bottom-0 h-[150%]" style={{ clipPath: "inset(-100% 0 0 0 round 0 0 2rem 2rem)" }}>
         <motion.img
           className="h-full w-full object-cover object-bottom"
-          src="/images/me.png"
+          src={assetUrl("images/me.webp")}
           alt="Tafa Belli Brown, full-stack developer"
           initial={reduce ? false : { scale: 0.96, opacity: 0, y: 14 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}

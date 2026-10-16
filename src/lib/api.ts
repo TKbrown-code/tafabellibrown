@@ -105,8 +105,8 @@ export const useSendMessage = () => {
 };
 
 /* ----------------------------- Admin hooks ---------------------------- */
-export const useAdminList = <T extends Row>(table: Table) =>
-  useQuery({ queryKey: ["admin", table], queryFn: () => list<T>(table, { admin: true }) });
+export const useAdminList = <T extends Row>(table: Table, enabled = true) =>
+  useQuery({ queryKey: ["admin", table], queryFn: () => list<T>(table, { admin: true }), enabled });
 
 export const useAdminSave = <T extends Row>(table: Table) => {
   const qc = useQueryClient();

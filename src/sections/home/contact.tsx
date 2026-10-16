@@ -13,9 +13,8 @@ export function Contact() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", body: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+  const [trap, setTrap] = useState("");
   const { showModal } = useModal();
-
-  console.log(send);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -29,22 +28,12 @@ export function Contact() {
   const submit = (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    const reset = () => { setForm({ name: "", email: "", subject: "", body: "" }); setTrap(""); };
+    const sent = () => showModal({ type: "success", title: t("f_sent_title"), description: t("f_sent") });
+    if (trap) { reset(); sent(); return; }
     send.mutate(form, {
-      onSuccess: () => {
-        setForm({ name: "", email: "", subject: "", body: "" });
-        showModal({
-          type: "success",
-          title: "Message sent successfully!",
-          description: t("f_sent"),
-        });
-      },
-      onError: () => {
-        showModal({
-          type: "error",
-          title: "someing went wrong",
-          description: t("f_error"),
-        });
-      }
+      onSuccess: () => { reset(); sent(); },
+      onError: () => showModal({ type: "error", title: t("f_error_title"), description: t("f_error") }),
     });
   };
 
@@ -77,7 +66,7 @@ export function Contact() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <form onSubmit={submit} noValidate className="card space-y-4 p-6 md:p-8" data-testid="form-contact">
+          <form onSubmit={submit} noValidate className="card relative space-y-4 p-6 md:p-8" data-testid="form-contact">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="label" htmlFor="c-name">{t("f_name")} *</label>
@@ -98,6 +87,10 @@ export function Contact() {
               <label className="label" htmlFor="c-body">{t("f_message")} *</label>
               <textarea id="c-body" rows={5} className="input resize-y" {...field("body")} data-testid="input-message" />
               {errors.body && <p className="mt-1 text-xs text-danger">{errors.body}</p>}
+            </div>
+            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+              <label htmlFor="c-company">Company</label>
+              <input id="c-company" tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
             </div>
             <div className="flex flex-wrap items-center gap-4 pt-1">
               <button type="submit" className="btn-primary" disabled={send.isPending} data-testid="button-send">
