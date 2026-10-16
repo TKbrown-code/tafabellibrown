@@ -38,6 +38,13 @@ export function Contact() {
           description: t("f_sent"),
         });
       },
+      onError: () => {
+        showModal({
+          type: "error",
+          title: "someing went wrong",
+          description: t("f_error"),
+        });
+      }
     });
   };
 
