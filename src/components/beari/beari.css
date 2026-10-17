@@ -1,7 +1,6 @@
 /* =========================================================
    BEARI — Floating AI Assistant
-   Theme: Warm Off-white, Navy & Light Blue
-   File: src/components/beari/beari.css
+   Colors follow the portfolio theme tokens.
    ========================================================= */
 
 /* ---------------------------------------------------------
@@ -9,15 +8,15 @@
    --------------------------------------------------------- */
 
 .beari-root {
-  --b-bg: #faf9f6;
-  --b-surface: #ffffff;
-  --b-text: #141b28;
-  --b-muted: #5b6478;
-  --b-accent: #1d3d9b;
-  --b-on-accent: #ffffff;
-  --b-line: rgba(20, 27, 40, 0.12);
-  --b-shadow: 0 10px 30px rgba(20, 27, 40, 0.14);
-  --b-danger: #b42318;
+  --b-bg: hsl(var(--bg));
+  --b-surface: hsl(var(--surface));
+  --b-text: hsl(var(--ink));
+  --b-muted: hsl(var(--muted));
+  --b-accent: hsl(var(--accent));
+  --b-on-accent: hsl(var(--accent-ink));
+  --b-line: hsl(var(--border));
+  --b-shadow: 0 10px 30px hsl(var(--shadow) / 0.14);
+  --b-danger: hsl(var(--danger));
   --b-radius: 20px;
 
   position: fixed;
@@ -41,46 +40,7 @@
 }
 
 /* ---------------------------------------------------------
-   2. Dark theme
-   Supports the portfolio's .dark class and data-theme.
-   --------------------------------------------------------- */
-
-.dark .beari-root,
-:root.dark .beari-root,
-:root[data-theme="dark"] .beari-root {
-  --b-bg: #0e0f16;
-  --b-surface: #14151f;
-  --b-text: #e9ebf1;
-  --b-muted: #9aa2b5;
-  --b-accent: #6f9af8;
-  --b-on-accent: #0e0f16;
-  --b-line: rgba(233, 235, 241, 0.14);
-  --b-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  --b-danger: #ff8a80;
-}
-
-/* Follow the system theme only when the website has no
-   explicit light or dark preference. */
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light):not(.dark):not([data-theme="light"]):not(
-      [data-theme="dark"]
-    )
-    .beari-root {
-    --b-bg: #0e0f16;
-    --b-surface: #14151f;
-    --b-text: #e9ebf1;
-    --b-muted: #9aa2b5;
-    --b-accent: #6f9af8;
-    --b-on-accent: #0e0f16;
-    --b-line: rgba(233, 235, 241, 0.14);
-    --b-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --b-danger: #ff8a80;
-  }
-}
-
-/* ---------------------------------------------------------
-   3. Reset and accessibility
+   2. Reset and accessibility
    --------------------------------------------------------- */
 
 .beari-root,
@@ -147,7 +107,7 @@
 .beari-fab:hover {
   transform: translateY(-2px);
   border-color: var(--b-accent);
-  box-shadow: 0 14px 34px rgba(20, 27, 40, 0.2);
+  box-shadow: 0 14px 34px hsl(var(--shadow) / 0.2);
 }
 
 .beari-fab:active {
@@ -573,10 +533,10 @@
   max-width: 100%;
   padding: 10px 12px;
 
-  border: 1px solid rgba(180, 35, 24, 0.2);
+  border: 1px solid hsl(var(--danger) / 0.2);
   border-radius: 12px;
 
-  background: rgba(180, 35, 24, 0.06);
+  background: hsl(var(--danger) / 0.06);
   color: var(--b-danger);
 
   font-size: 13px;
@@ -824,4 +784,3 @@
     display: none !important;
   }
 }
-
