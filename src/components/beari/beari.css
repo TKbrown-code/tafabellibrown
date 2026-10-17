@@ -1,0 +1,827 @@
+/* =========================================================
+   BEARI — Floating AI Assistant
+   Theme: Warm Off-white, Navy & Light Blue
+   File: src/components/beari/beari.css
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Theme variables and widget positioning
+   --------------------------------------------------------- */
+
+.beari-root {
+  --b-bg: #faf9f6;
+  --b-surface: #ffffff;
+  --b-text: #141b28;
+  --b-muted: #5b6478;
+  --b-accent: #1d3d9b;
+  --b-on-accent: #ffffff;
+  --b-line: rgba(20, 27, 40, 0.12);
+  --b-shadow: 0 10px 30px rgba(20, 27, 40, 0.14);
+  --b-danger: #b42318;
+  --b-radius: 20px;
+
+  position: fixed;
+  z-index: 2147483000;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+
+  color: var(--b-text);
+  font-family:
+    Satoshi,
+    "Cabinet Grotesk",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  line-height: 1.5;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------------------------------------------------------
+   2. Dark theme
+   Supports the portfolio's .dark class and data-theme.
+   --------------------------------------------------------- */
+
+.dark .beari-root,
+:root.dark .beari-root,
+:root[data-theme="dark"] .beari-root {
+  --b-bg: #0e0f16;
+  --b-surface: #14151f;
+  --b-text: #e9ebf1;
+  --b-muted: #9aa2b5;
+  --b-accent: #6f9af8;
+  --b-on-accent: #0e0f16;
+  --b-line: rgba(233, 235, 241, 0.14);
+  --b-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --b-danger: #ff8a80;
+}
+
+/* Follow the system theme only when the website has no
+   explicit light or dark preference. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark):not([data-theme="light"]):not(
+      [data-theme="dark"]
+    )
+    .beari-root {
+    --b-bg: #0e0f16;
+    --b-surface: #14151f;
+    --b-text: #e9ebf1;
+    --b-muted: #9aa2b5;
+    --b-accent: #6f9af8;
+    --b-on-accent: #0e0f16;
+    --b-line: rgba(233, 235, 241, 0.14);
+    --b-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --b-danger: #ff8a80;
+  }
+}
+
+/* ---------------------------------------------------------
+   3. Reset and accessibility
+   --------------------------------------------------------- */
+
+.beari-root,
+.beari-root *,
+.beari-root *::before,
+.beari-root *::after {
+  box-sizing: border-box;
+}
+
+.beari-root button,
+.beari-root input {
+  font: inherit;
+}
+
+.beari-root button {
+  color: inherit;
+}
+
+.beari-root button:focus-visible,
+.beari-root input:focus-visible {
+  outline: 2px solid var(--b-accent);
+  outline-offset: 3px;
+}
+
+.beari-root button:disabled {
+  cursor: not-allowed;
+}
+
+.beari-root svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------
+   4. Floating action button
+   --------------------------------------------------------- */
+
+.beari-fab {
+  display: grid;
+  place-items: center;
+
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  margin-left: auto;
+
+  overflow: hidden;
+  border: 1px solid var(--b-line);
+  border-radius: 50%;
+
+  background: var(--b-surface);
+  color: var(--b-text);
+  box-shadow: var(--b-shadow);
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.beari-fab:hover {
+  transform: translateY(-2px);
+  border-color: var(--b-accent);
+  box-shadow: 0 14px 34px rgba(20, 27, 40, 0.2);
+}
+
+.beari-fab:active {
+  transform: scale(0.96);
+}
+
+.beari-fab svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* ---------------------------------------------------------
+   5. Chat window
+   --------------------------------------------------------- */
+
+.beari-window {
+  position: absolute;
+  right: 0;
+  bottom: 78px;
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(380px, calc(100vw - 40px));
+  height: min(560px, calc(100dvh - 130px));
+  min-height: 300px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--b-line);
+  border-radius: var(--b-radius);
+
+  background: var(--b-surface);
+  color: var(--b-text);
+  box-shadow: var(--b-shadow);
+
+  transform-origin: bottom right;
+  animation: beari-pop 220ms ease-out;
+}
+
+@keyframes beari-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------------------------------------------------------
+   6. Header
+   --------------------------------------------------------- */
+
+.beari-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex: 0 0 auto;
+  min-height: 64px;
+  padding: 12px 14px;
+
+  border-bottom: 1px solid var(--b-line);
+  background: var(--b-surface);
+}
+
+.beari-header > svg {
+  flex-shrink: 0;
+}
+
+.beari-heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.beari-heading strong {
+  color: var(--b-text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.beari-sub {
+  margin-top: 2px;
+  color: var(--b-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Header buttons, including close */
+
+.beari-icon {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  padding: 0;
+
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--b-muted);
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.beari-icon:hover {
+  color: var(--b-text);
+  background: var(--b-bg);
+}
+
+.beari-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------------------------------------------------------
+   7. Message list
+   --------------------------------------------------------- */
+
+.beari-list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+
+  min-height: 0;
+  padding: 16px 14px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--b-line) transparent;
+
+  background: var(--b-bg);
+}
+
+.beari-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.beari-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.beari-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--b-line);
+}
+
+/* Individual message rows */
+
+.beari-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.beari-assistant {
+  justify-content: flex-start;
+}
+
+.beari-user {
+  justify-content: flex-end;
+}
+
+.beari-row > svg {
+  flex: 0 0 auto;
+  max-width: 32px;
+  max-height: 32px;
+}
+
+/* ---------------------------------------------------------
+   8. Message bubbles
+   --------------------------------------------------------- */
+
+.beari-bubble {
+  max-width: 84%;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 13px;
+
+  border-radius: 16px;
+
+  font-size: 14px;
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.beari-assistant .beari-bubble {
+  border: 1px solid var(--b-line);
+  border-bottom-left-radius: 6px;
+
+  background: var(--b-surface);
+  color: var(--b-text);
+}
+
+.beari-user .beari-bubble {
+  border: 1px solid transparent;
+  border-bottom-right-radius: 6px;
+
+  background: var(--b-accent);
+  color: var(--b-on-accent);
+}
+
+/* Message groups allow related content to stack */
+
+.beari-message-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.beari-message-group .beari-row {
+  width: 100%;
+}
+
+.beari-message-group .beari-row.beari-user {
+  justify-content: flex-end;
+}
+
+.beari-message-group .beari-row.beari-assistant {
+  justify-content: flex-start;
+}
+
+/* ---------------------------------------------------------
+   9. Project references
+   --------------------------------------------------------- */
+
+.beari-projects {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  max-width: 100%;
+  padding-left: 2px;
+}
+
+.beari-section-label {
+  display: block;
+  margin: 2px 0 0;
+
+  color: var(--b-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.beari-project-tag {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 100%;
+  padding: 5px 10px;
+
+  border: 1px solid var(--b-line);
+  border-radius: 999px;
+
+  background: var(--b-surface);
+  color: var(--b-text);
+
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------
+   10. Suggested follow-up questions
+   --------------------------------------------------------- */
+
+.beari-followups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+
+  width: 100%;
+  max-width: 100%;
+  padding-left: 2px;
+}
+
+.beari-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 7px;
+
+  width: 100%;
+  max-width: 100%;
+}
+
+.beari-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  max-width: 100%;
+  min-height: 32px;
+  padding: 7px 11px;
+
+  border: 1px solid var(--b-line);
+  border-radius: 999px;
+
+  background: var(--b-surface);
+  color: var(--b-text);
+
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  overflow-wrap: anywhere;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.beari-suggestion:hover {
+  border-color: var(--b-accent);
+  background: var(--b-surface);
+  color: var(--b-accent);
+}
+
+.beari-suggestion:active {
+  transform: scale(0.98);
+}
+
+.beari-suggestion:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   11. Loading animation
+   --------------------------------------------------------- */
+
+.beari-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  height: 16px;
+  min-width: 30px;
+}
+
+.beari-dots i {
+  display: block;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: var(--b-muted);
+
+  animation: beari-dot 1.2s infinite ease-in-out;
+}
+
+.beari-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.beari-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes beari-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------------------------------------------------------
+   12. Error and retry
+   --------------------------------------------------------- */
+
+.beari-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+
+  max-width: 100%;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(180, 35, 24, 0.2);
+  border-radius: 12px;
+
+  background: rgba(180, 35, 24, 0.06);
+  color: var(--b-danger);
+
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.beari-retry {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 32px;
+  padding: 3px 0;
+
+  border: 0;
+  background: transparent;
+  color: var(--b-accent);
+
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.beari-retry:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---------------------------------------------------------
+   13. Message input form
+   --------------------------------------------------------- */
+
+.beari-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+
+  border-top: 1px solid var(--b-line);
+  background: var(--b-surface);
+}
+
+.beari-form input {
+  display: block;
+  flex: 1 1 auto;
+
+  width: 0;
+  min-width: 0;
+  height: 44px;
+  padding: 10px 13px;
+
+  border: 1px solid var(--b-line);
+  border-radius: 12px;
+
+  background: var(--b-bg);
+  color: var(--b-text);
+
+  font-size: 16px;
+  line-height: 1.4;
+
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.beari-form input::placeholder {
+  color: var(--b-muted);
+  opacity: 0.85;
+}
+
+.beari-form input:focus {
+  border-color: var(--b-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--b-accent) 14%, transparent);
+}
+
+.beari-form input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   14. Send button
+   --------------------------------------------------------- */
+
+.beari-send {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: var(--b-accent);
+  color: var(--b-on-accent);
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    filter 160ms ease;
+}
+
+.beari-send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.beari-send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.beari-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.beari-send svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------------------------------------------------------
+   15. Small-screen layout
+   --------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .beari-root {
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .beari-fab {
+    width: 58px;
+    height: 58px;
+  }
+
+  .beari-window {
+    right: 0;
+    bottom: 70px;
+
+    width: min(380px, calc(100vw - 24px));
+    height: min(560px, calc(100dvh - 100px));
+    min-height: min(300px, calc(100dvh - 100px));
+
+    border-radius: 18px;
+  }
+
+  .beari-header {
+    gap: 9px;
+    padding: 10px 12px;
+  }
+
+  .beari-list {
+    gap: 12px;
+    padding: 14px 11px;
+  }
+
+  .beari-bubble {
+    max-width: 88%;
+    padding: 9px 11px;
+    font-size: 14px;
+  }
+
+  .beari-form {
+    gap: 7px;
+    padding: 10px;
+  }
+
+  .beari-form input {
+    padding-right: 10px;
+    padding-left: 11px;
+  }
+
+  .beari-suggestions {
+    gap: 6px;
+  }
+
+  .beari-suggestion {
+    min-height: 34px;
+    padding: 7px 10px;
+  }
+}
+
+/* Short phone screens */
+
+@media (max-height: 480px) {
+  .beari-window {
+    height: calc(100dvh - 90px);
+    min-height: 220px;
+    bottom: 70px;
+  }
+
+  .beari-header {
+    min-height: 54px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .beari-list {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .beari-form {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+/* ---------------------------------------------------------
+   16. Reduced motion
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .beari-root *,
+  .beari-root *::before,
+  .beari-root *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   17. Optional: hide the widget when printing
+   --------------------------------------------------------- */
+
+@media print {
+  .beari-root {
+    display: none !important;
+  }
+}
+
