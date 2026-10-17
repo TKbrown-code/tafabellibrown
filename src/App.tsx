@@ -9,6 +9,7 @@ import {ProjectPage} from "@/pages/ProjectPage";
 import { BlogIndex } from "@/pages/blog";
 import { PostPage } from "@/pages/postPage";
 import {NotFound} from "@/pages/404";
+import BeariWidget from "./components/beari/BeariWidget";
 
 const Admin = lazy(() => import("@/admin/Admin"));
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, refetchOnWindowFocus: false } } });
@@ -37,6 +38,7 @@ export default function App() {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <BeariWidget />
             </Shell>
           </Router>
         </I18nProvider>

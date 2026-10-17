@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./supabase";
 import type { Message, NewMessage, Post, Project, Skill } from "./types";
 import { seedPosts, seedProjects, seedSkills } from "@/data/seed";
+import axios from "axios";
 
 
 const demo = {
@@ -94,6 +95,7 @@ export async function sendMessage(m: NewMessage) {
   if (error) throw error;
 }
 
+
 /* ---------------------------- Public hooks ---------------------------- */
 export const useProjects = () => useQuery({ queryKey: ["projects"], queryFn: () => list<Project>("projects") });
 export const usePosts = () => useQuery({ queryKey: ["posts"], queryFn: () => list<Post>("posts") });
@@ -103,6 +105,15 @@ export const useSendMessage = () => {
   const qc = useQueryClient();
   return useMutation({ mutationFn: sendMessage, onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "messages"] }) });
 };
+
+
+export const Beari = axios.create({
+  baseURL: "/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 60_000,
+});
 
 /* ----------------------------- Admin hooks ---------------------------- */
 export const useAdminList = <T extends Row>(table: Table) =>
