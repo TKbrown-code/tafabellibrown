@@ -401,6 +401,14 @@
   font-size: 12px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.beari-project-tag:hover {
+  border-color: var(--b-accent);
+  color: var(--b-accent);
 }
 
 /* ---------------------------------------------------------
@@ -447,6 +455,7 @@
   line-height: 1.4;
   text-align: left;
   overflow-wrap: anywhere;
+  text-decoration: none;
 
   cursor: pointer;
   touch-action: manipulation;

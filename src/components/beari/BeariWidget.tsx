@@ -5,6 +5,7 @@ import {
   createMessageId,
   sendBeariMessage,
   type ChatMessage,
+  type ProjectMention,
 } from "@/services/beari";
 import "./beari.css";
 
@@ -14,20 +15,82 @@ export interface BeariWidgetProps {
   defaultOpen?: boolean;
 }
 
+const TRANSCRIPT_KEY = "beari.transcript.v1";
+const TRANSCRIPT_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_VISIBLE_HISTORY = 10;
+
+function isStoredMessage(value: unknown): value is ChatMessage {
+  if (!value || typeof value !== "object") return false;
+  const message = value as Record<string, unknown>;
+  return (
+    typeof message.id === "string" &&
+    (message.role === "user" || message.role === "assistant") &&
+    typeof message.content === "string"
+  );
+}
+
+function restoreMessages(greeting: string): ChatMessage[] {
+  const initial: ChatMessage = {
+    id: "greeting",
+    role: "assistant",
+    content: greeting,
+  };
+
+  try {
+    const raw = sessionStorage.getItem(TRANSCRIPT_KEY);
+    if (!raw) return [initial];
+
+    const stored = JSON.parse(raw) as { savedAt?: unknown; messages?: unknown };
+    if (
+      typeof stored.savedAt !== "number" ||
+      Date.now() - stored.savedAt > TRANSCRIPT_TTL_MS ||
+      !Array.isArray(stored.messages)
+    ) {
+      sessionStorage.removeItem(TRANSCRIPT_KEY);
+      return [initial];
+    }
+
+    const restored = stored.messages
+      .filter(isStoredMessage)
+      .slice(-MAX_VISIBLE_HISTORY)
+      .map((message) => {
+        const record = message as ChatMessage & Record<string, unknown>;
+        const projectMentions = Array.isArray(record.projectsMentioned)
+          ? record.projectsMentioned.filter(
+              (project): project is ProjectMention =>
+                Boolean(project) &&
+                typeof project === "object" &&
+                typeof (project as ProjectMention).title === "string" &&
+                typeof (project as ProjectMention).slug === "string",
+            )
+          : undefined;
+        return {
+          ...message,
+          suggestedFollowups: Array.isArray(record.suggestedFollowups)
+            ? record.suggestedFollowups.filter(
+                (item): item is string => typeof item === "string",
+              )
+            : undefined,
+          projectsMentioned: projectMentions,
+        };
+      });
+
+    return [initial, ...restored];
+  } catch {
+    return [initial];
+  }
+}
+
 export default function BeariWidget({
-  greeting = "Hi, I'm Beari. Ask me about this portfolio, the projects, or how to get in touch.",
+  greeting = "Hi, I'm Beari, Tafa's portfolio assistant. Ask me about his projects, skills, or how to get in touch.",
   placeholder,
   defaultOpen = false,
 }: BeariWidgetProps) {
   const [open, setOpen] = useState(defaultOpen);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "greeting",
-      role: "assistant",
-      content: greeting,
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    restoreMessages(greeting),
+  );
 
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<ChatStatus>("idle");
@@ -37,6 +100,7 @@ export default function BeariWidget({
   const [gaze, setGaze] = useState<{ x: number; y: number } | null>(null);
   const [asleep, setAsleep] = useState(false);
   const [failedText, setFailedText] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const timers = useRef<number[]>([]);
   const alive = useRef(false);
@@ -71,6 +135,24 @@ export default function BeariWidget({
       abortRef.current?.abort();
     };
   }, [clearTimers]);
+
+  useEffect(() => {
+    const transcript = messages
+      .filter((message) => message.id !== "greeting")
+      .slice(-MAX_VISIBLE_HISTORY);
+    try {
+      if (transcript.length === 0) {
+        sessionStorage.removeItem(TRANSCRIPT_KEY);
+      } else {
+        sessionStorage.setItem(
+          TRANSCRIPT_KEY,
+          JSON.stringify({ savedAt: Date.now(), messages: transcript }),
+        );
+      }
+    } catch {
+      // The chat still works if browser storage is unavailable.
+    }
+  }, [messages]);
 
   // Keep the mascot's expression synchronized with the chat state.
   const mood: BeariState =
@@ -139,6 +221,7 @@ export default function BeariWidget({
 
       requestInProgress.current = true;
       setFailedText(null);
+      setErrorMessage(null);
       setInput("");
       setStatus("loading");
 
@@ -190,9 +273,16 @@ export default function BeariWidget({
         later(() => {
           setStatus("idle");
         }, speakingDuration + 1800);
-      } catch {
+      } catch (error) {
         if (!alive.current || controller.signal.aborted) return;
 
+        const statusCode = (error as { response?: { status?: number } })
+          ?.response?.status;
+        setErrorMessage(
+          statusCode === 429
+            ? "You've reached Beari's short-term message limit. Please wait a little and try again."
+            : "Sorry, I couldn't get an answer just now. Please check your connection and try again.",
+        );
         setFailedText(message);
         setStatus("error");
       } finally {
@@ -217,6 +307,7 @@ export default function BeariWidget({
           placeholder={placeholder}
           inputRef={inputRef}
           canRetry={failedText !== null}
+          errorMessage={errorMessage ?? undefined}
           onInputChange={(value) => {
             setInput(value);
 
