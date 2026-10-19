@@ -1,6 +1,7 @@
 import { useEffect, useRef, type FormEvent, type Ref } from "react";
+import { Link } from "react-router-dom";
 import { BeariMascot, type BeariState } from "./BeariMascot";
-import type { ChatMessage } from "@/services/beari";
+import type { ChatMessage, ProjectMention } from "@/services/beari";
 
 export type ChatStatus =
   | "idle"
@@ -17,6 +18,7 @@ export interface BeariChatProps {
   placeholder?: string;
   inputRef?: Ref<HTMLInputElement>;
   canRetry: boolean;
+  errorMessage?: string;
   onInputChange: (value: string) => void;
   onFocusChange: (focused: boolean) => void;
   onSubmit: () => void;
@@ -49,6 +51,28 @@ const SendIcon = () => (
   </svg>
 );
 
+function followupDestination(
+  suggestion: string,
+  projects: ProjectMention[],
+): { to: string; state?: { scrollTo: string } } | null {
+  const normalized = suggestion.toLowerCase();
+  const project = projects.find((item) =>
+    normalized.includes(item.title.toLowerCase()),
+  );
+  if (project) return { to: `/projects/${project.slug}` };
+  if (/contact|hire|reach out|get in touch/.test(normalized)) {
+    return { to: "/", state: { scrollTo: "contact" } };
+  }
+  if (/blog|post|article|writing/.test(normalized)) return { to: "/blog" };
+  if (/skill|technology|tech stack/.test(normalized)) {
+    return { to: "/", state: { scrollTo: "skills" } };
+  }
+  if (/project|work|case study/.test(normalized)) {
+    return { to: "/", state: { scrollTo: "projects" } };
+  }
+  return null;
+}
+
 export default function BeariChat({
   messages,
   status,
@@ -57,6 +81,7 @@ export default function BeariChat({
   placeholder = "Ask Beari something",
   inputRef,
   canRetry,
+  errorMessage,
   onInputChange,
   onFocusChange,
   onSubmit,
@@ -165,12 +190,13 @@ export default function BeariChat({
 
                   <div className="beari-suggestions">
                     {message.projectsMentioned.map((project) => (
-                      <span
-                        key={project}
+                      <Link
+                        key={project.slug}
+                        to={`/projects/${project.slug}`}
                         className="beari-project-tag"
                       >
-                        {project}
-                      </span>
+                        {project.title}
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -186,16 +212,34 @@ export default function BeariChat({
 
                   <div className="beari-suggestions">
                     {message.suggestedFollowups.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        className="beari-suggestion"
-                        disabled={status === "loading"}
-                        onClick={() => onFollowup(suggestion)}
-                      >
-                        {suggestion}
-                        <span aria-hidden="true"> ↗</span>
-                      </button>
+                      (() => {
+                        const destination = followupDestination(
+                          suggestion,
+                          message.projectsMentioned ?? [],
+                        );
+                        return destination ? (
+                          <Link
+                            key={suggestion}
+                            to={destination.to}
+                            state={destination.state}
+                            className="beari-suggestion"
+                          >
+                            {suggestion}
+                            <span aria-hidden="true"> ↗</span>
+                          </Link>
+                        ) : (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            className="beari-suggestion"
+                            disabled={status === "loading"}
+                            onClick={() => onFollowup(suggestion)}
+                          >
+                            {suggestion}
+                            <span aria-hidden="true"> ↗</span>
+                          </button>
+                        );
+                      })()
                     ))}
                   </div>
                 </div>
@@ -237,8 +281,8 @@ export default function BeariChat({
 
             <div className="beari-bubble beari-error" role="alert">
               <p>
-                Sorry, I couldn't get an answer just now. Please check your
-                connection and try again.
+                {errorMessage ??
+                  "Sorry, I couldn't get an answer just now. Please check your connection and try again."}
               </p>
 
               {canRetry && (
