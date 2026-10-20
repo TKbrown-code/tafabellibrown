@@ -8,7 +8,7 @@ export function BlogPreview() {
   const { t, loc, lang } = useI18n();
   const { data, isLoading } = usePosts();
   return (
-    <section id="blog" className="section border-t border-border bg-surface/50">
+    <section id="blog" className="section border-t border-border">
       <div className="container">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <Reveal>
@@ -29,8 +29,8 @@ export function BlogPreview() {
                   <span>·</span>
                   <span>{p.reading_minutes} {t("min_read")}</span>
                 </div>
-                <h3 className="mt-3 text-xl font-bold leading-snug transition-colors group-hover:text-accent">{loc(p.title, p.title_zh)}</h3>
-                <p className="mt-3 text-sm text-muted">{loc(p.excerpt, p.excerpt_zh)}</p>
+                <h3 className="mt-3 text-xl font-bold leading-snug transition-colors group-hover:text-accent">{loc(p.title, p.title_zh, p.title_fr, p.title_es, p.title_ar, p.title_pcm)}</h3>
+                <p className="mt-3 text-sm text-muted">{loc(p.excerpt, p.excerpt_zh, p.excerpt_fr, p.excerpt_es, p.excerpt_ar, p.excerpt_pcm)}</p>
                 <div className="mt-auto flex flex-wrap gap-1.5 pt-6">
                   {p.tags.map((tg) => <span key={tg} className="chip">{tg}</span>)}
                 </div>

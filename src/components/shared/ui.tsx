@@ -76,7 +76,8 @@ export function assetUrl(u?: string | null) {
   return import.meta.env.BASE_URL + u.replace(/^\.?\//, "");
 }
 
-export function formatDate(iso: string | null, lang: "en" | "zh") {
+export function formatDate(iso: string | null, lang: "en" | "fr" | "zh" | "es" | "ar" | "pcm") {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "short", day: "numeric" });
+  const locale = lang === "zh" ? "zh-CN" : lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : lang === "ar" ? "ar" : lang === "pcm" ? "en-NG" : "en-US";
+  return new Date(iso).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 }

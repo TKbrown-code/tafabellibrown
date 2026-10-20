@@ -1,0 +1,43 @@
+.resume-editor .ProseMirror {
+  min-height: clamp(32rem, 68dvh, 48rem);
+  padding: 1.5rem 1.75rem;
+  outline: none;
+  color: hsl(var(--ink));
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.resume-editor .ProseMirror h1,
+.resume-editor .ProseMirror h2,
+.resume-editor .ProseMirror h3,
+.resume-sheet h1,
+.resume-sheet h2,
+.resume-sheet h3 { color: hsl(var(--ink)); font-family: var(--font-display); }
+.resume-sheet h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin: 0 0 .75rem; }
+.resume-sheet h2 { font-size: 1.05rem; font-weight: 700; line-height: 1.3; margin: 1.4rem 0 .55rem; padding-bottom: .3rem; text-transform: uppercase; letter-spacing: .06em; }
+.resume-sheet h3 { font-size: 1rem; font-weight: 600; line-height: 1.35; margin: 1rem 0 .3rem; }
+.resume-sheet p { line-height: 1.55; margin: .4rem 0; }
+.resume-sheet ul,
+.resume-sheet ol { margin: .45rem 0; padding-left: 1.4rem; }
+.resume-sheet li { margin: .2rem 0; }
+.resume-editor .ProseMirror a,
+.resume-sheet a { color: hsl(var(--accent)); }
+.resume-editor .ProseMirror li::marker,
+.resume-sheet li::marker { color: hsl(var(--accent)); }
+.resume-editor .ProseMirror code,
+.resume-sheet code,
+.resume-sheet pre { background: hsl(var(--surface-2)); color: hsl(var(--ink)); }
+.resume-sheet { color: hsl(var(--ink)); }
+.resume-sheet h2 { border-bottom: 1px solid hsl(var(--border)); }
+.resume-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(var(--faint));
+}
+.resume-editor .ProseMirror h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
+.resume-editor .ProseMirror h2 {
+  font-size: 1.05rem; margin: 1.4rem 0 .5rem; padding-bottom: .25rem;
+  border-bottom: 1px solid hsl(var(--border)); text-transform: uppercase; letter-spacing: .06em;
+}
+.resume-editor .ProseMirror h3 { font-size: 1rem; margin: 1rem 0 .25rem; }

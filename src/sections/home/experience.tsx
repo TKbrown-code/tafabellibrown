@@ -1,12 +1,15 @@
 import { Briefcase, Check, GraduationCap } from "lucide-react";
 import { useI18n} from "@/lib/i18n";
 import { site } from "@/data/site";
-import { Reveal } from "@/components/shared/ui";
+import { ExternalLink, Reveal } from "@/components/shared/ui";
+import { useProjects } from "@/lib/api";
+import { Link } from "react-router-dom";
 
 export function Experience() {
-  const { t, pick } = useI18n();
+  const { t, pick, loc } = useI18n();
+  const { data: projects = [] } = useProjects();
   return (
-    <section id="experience" className="section">
+    <section id="experience" className="section border-t border-border bg-surface/50">
       <div className="container grid gap-12 lg:grid-cols-[1fr_2fr]">
         <Reveal>
           <p className="kicker">{t("experience_kicker")}</p>
@@ -47,6 +50,17 @@ export function Experience() {
               <p className="text-sm text-muted">{pick(site.education.school)} · {pick(site.education.place)}</p>
             </div>
           </Reveal>
+          {!!projects.length && <Reveal>
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-sans text-sm font-bold">{t("experience_projects")}</h3>
+              <ul className="mt-3 divide-y divide-border">
+                {projects.map((project) => <li key={project.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0"><p className="font-medium text-ink">{loc(project.title, project.title_zh, project.title_fr, project.title_es, project.title_ar, project.title_pcm)}</p><p className="text-xs text-muted">{loc(project.role, project.role_zh, project.role_fr, project.role_es, project.role_ar, project.role_pcm)} · {project.year}</p></div>
+                  <div className="flex shrink-0 gap-3 text-xs"><Link className="link" to={`/projects/${project.slug}`}>{t("read_case")}</Link>{project.live_url && <ExternalLink className="link" href={project.live_url}>{t("visit_site")}</ExternalLink>}</div>
+                </li>)}
+              </ul>
+            </div>
+          </Reveal>}
         </div>
       </div>
     </section>

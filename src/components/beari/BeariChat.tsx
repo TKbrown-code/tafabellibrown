@@ -1,5 +1,6 @@
-import { useEffect, useRef, type FormEvent, type Ref } from "react";
+import { useEffect, useRef, useState, type FormEvent, type Ref } from "react";
 import { Link } from "react-router-dom";
+import { BeariMarkdown } from "@/components/shared/BeariMarkdown";
 import { BeariMascot, type BeariState } from "./BeariMascot";
 import type { ChatMessage, ProjectMention } from "@/services/beari";
 
@@ -24,8 +25,14 @@ export interface BeariChatProps {
   onSubmit: () => void;
   onFollowup: (suggestion: string) => void;
   onRetry: () => void;
+  onToggleVoice: () => void;
+  isListening: boolean;
+  voiceError?: string | null;
+  onFeedbackSubmit: (rating: number, feedback: string) => Promise<void>;
   onClose: () => void;
 }
+
+const FEEDBACK_SESSION_KEY = "beari.feedback.completed.v1";
 
 const CloseIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -87,9 +94,23 @@ export default function BeariChat({
   onSubmit,
   onFollowup,
   onRetry,
+  onToggleVoice,
+  isListening,
+  voiceError,
+  onFeedbackSubmit,
   onClose,
 }: BeariChatProps) {
   const listRef = useRef<HTMLDivElement>(null);
+  const [feedbackCompleted, setFeedbackCompleted] = useState(() => {
+    try { return sessionStorage.getItem(FEEDBACK_SESSION_KEY) === "1"; } catch { return false; }
+  });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackPending, setFeedbackPending] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [feedbackThanks, setFeedbackThanks] = useState(false);
+  const assistantReplies = messages.filter((message) => message.role === "assistant" && message.id !== "greeting").length;
 
   useEffect(() => {
     const list = listRef.current;
@@ -101,6 +122,31 @@ export default function BeariChat({
       });
     }
   }, [messages, status]);
+
+  useEffect(() => {
+    if (assistantReplies >= 2 && !feedbackCompleted) setFeedbackOpen(true);
+  }, [assistantReplies, feedbackCompleted]);
+
+  const dismissFeedback = () => {
+    setFeedbackOpen(false);
+    setFeedbackCompleted(true);
+    try { sessionStorage.setItem(FEEDBACK_SESSION_KEY, "1"); } catch { /* Feedback prompt stays dismissed for this open chat. */ }
+  };
+
+  const submitFeedback = async () => {
+    if (!rating || feedbackPending) return;
+    setFeedbackPending(true);
+    setFeedbackError("");
+    try {
+      await onFeedbackSubmit(rating, feedbackText.trim());
+      setFeedbackThanks(true);
+      window.setTimeout(dismissFeedback, 1800);
+    } catch {
+      setFeedbackError("Feedback could not be sent. Please try again.");
+    } finally {
+      setFeedbackPending(false);
+    }
+  };
 
   const subtitle =
     status === "loading"
@@ -177,7 +223,11 @@ export default function BeariChat({
                 />
               )}
 
-              <p className="beari-bubble">{message.content}</p>
+              {message.role === "assistant" ? (
+                <div className="beari-bubble"><BeariMarkdown>{message.content}</BeariMarkdown></div>
+              ) : (
+                <p className="beari-bubble">{message.content}</p>
+              )}
             </div>
 
             {message.role === "assistant" &&
@@ -299,7 +349,29 @@ export default function BeariChat({
         )}
       </div>
 
+      {voiceError && <p className="beari-voice-error" role="status">{voiceError}</p>}
+
+      {feedbackOpen && !feedbackCompleted && (
+        <section className="beari-feedback" aria-label="Rate your Beari chat" aria-live="polite">
+          <button type="button" className="beari-feedback-close" aria-label="Close feedback prompt" onClick={dismissFeedback}><CloseIcon /></button>
+          {feedbackThanks ? <p className="beari-feedback-thanks">Thanks for helping Beari get better.</p> : <>
+            <p className="beari-feedback-title">How was your chat with Beari?</p>
+            <p className="beari-feedback-copy">A quick rating helps improve the visitor assistant.</p>
+            <div className="beari-rating" role="group" aria-label="Rate Beari from 1 to 5 stars">
+              {[1, 2, 3, 4, 5].map((value) => <button key={value} type="button" aria-label={`${value} out of 5 stars`} aria-pressed={rating === value} className={`beari-star ${rating >= value ? "is-selected" : ""}`} onClick={() => setRating(value)}>★</button>)}
+            </div>
+            <label className="beari-feedback-label" htmlFor="beari-feedback-text">Anything we could improve? <span>Optional</span></label>
+            <textarea id="beari-feedback-text" className="beari-feedback-input" value={feedbackText} maxLength={600} onChange={(event) => setFeedbackText(event.target.value)} placeholder="Share a quick note…" rows={2} />
+            {feedbackError && <p className="beari-feedback-error" role="alert">{feedbackError}</p>}
+            <div className="beari-feedback-actions"><button type="button" className="beari-feedback-skip" onClick={dismissFeedback}>Not now</button><button type="button" className="beari-feedback-submit" onClick={() => void submitFeedback()} disabled={!rating || feedbackPending}>{feedbackPending ? "Sending…" : "Send feedback"}</button></div>
+          </>}
+        </section>
+      )}
+
       <form className="beari-form" onSubmit={handleSubmit}>
+        <button type="button" className={`beari-mic ${isListening ? "is-listening" : ""}`} aria-label={isListening ? "Stop voice input" : "Start voice input"} aria-pressed={isListening} title={isListening ? "Listening… click to stop" : "Speak to Beari"} onClick={onToggleVoice} disabled={status === "loading"}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.8"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-3 0h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        </button>
         <input
           ref={inputRef}
           value={input}

@@ -4,7 +4,9 @@ import { useTitle } from "../components/shared/Layout"
 
 export function NotFound() {
   const { t } = useI18n();
-  useTitle(t("not_found"));
+  useTitle(t("not_found"), "The page you requested could not be found.", {
+    noIndex: true,
+  });
   return (
     <div className="container grid min-h-[60vh] place-items-center py-20 text-center">
       <div>

@@ -3,9 +3,23 @@
   <!-- Home (sections #about #skills #projects #experience #blog #contact live on this page) -->
   <url>
     <loc>https://tafabellibrown.vercel.app/</loc>
-    <lastmod>2026-10-16</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+  </url>
+
+  <!-- Public collection pages -->
+  <url>
+    <loc>https://tafabellibrown.vercel.app/projects</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://tafabellibrown.vercel.app/services</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 
   <!-- Projects -->
