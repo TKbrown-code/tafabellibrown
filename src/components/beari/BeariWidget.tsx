@@ -3,11 +3,28 @@ import { BeariMascot, type BeariState } from "./BeariMascot";
 import BeariChat, { type ChatStatus } from "./BeariChat";
 import {
   createMessageId,
+  sendBeariFeedback,
   sendBeariMessage,
   type ChatMessage,
   type ProjectMention,
 } from "@/services/beari";
 import "./beari.css";
+
+type SpeechResult = { isFinal: boolean; 0: { transcript: string } };
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: { resultIndex: number; results: ArrayLike<SpeechResult> }) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+type SpeechWindow = Window & {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+};
 
 export interface BeariWidgetProps {
   greeting?: string;
@@ -16,6 +33,7 @@ export interface BeariWidgetProps {
 }
 
 const TRANSCRIPT_KEY = "beari.transcript.v1";
+const WELCOME_SEEN_KEY = "beari.welcome-seen.v1";
 const TRANSCRIPT_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_VISIBLE_HISTORY = 10;
 
@@ -87,6 +105,7 @@ export default function BeariWidget({
   defaultOpen = false,
 }: BeariWidgetProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     restoreMessages(greeting),
@@ -101,6 +120,8 @@ export default function BeariWidget({
   const [asleep, setAsleep] = useState(false);
   const [failedText, setFailedText] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const timers = useRef<number[]>([]);
   const alive = useRef(false);
@@ -108,6 +129,7 @@ export default function BeariWidget({
   const inputRef = useRef<HTMLInputElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const speechRef = useRef<SpeechRecognitionLike | null>(null);
 
   const clearTimers = useCallback(() => {
     timers.current.forEach((id) => window.clearTimeout(id));
@@ -132,6 +154,9 @@ export default function BeariWidget({
     return () => {
       alive.current = false;
       clearTimers();
+      speechRef.current?.stop();
+      speechRef.current = null;
+      setIsListening(false);
       abortRef.current?.abort();
     };
   }, [clearTimers]);
@@ -186,17 +211,36 @@ export default function BeariWidget({
     return () => window.clearTimeout(id);
   }, [open, hover]);
 
+  useEffect(() => {
+    if (open) {
+      setWelcomeVisible(false);
+      return;
+    }
+    try {
+      if (sessionStorage.getItem(WELCOME_SEEN_KEY)) return;
+    } catch { /* Show the greeting if browser storage is unavailable. */ }
+    const id = window.setTimeout(() => {
+      setWelcomeVisible(true);
+      try { sessionStorage.setItem(WELCOME_SEEN_KEY, "1"); } catch { /* The greeting still works without storage. */ }
+    }, 1300);
+    return () => window.clearTimeout(id);
+  }, [open]);
+
   const openChat = useCallback(() => {
     setOpen(true);
+    setWelcomeVisible(false);
     setAsleep(false);
     setWelcoming(true);
 
     later(() => setWelcoming(false), 1600);
 
-    requestAnimationFrame(() => inputRef.current?.focus());
+    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   }, [later]);
 
   const closeChat = useCallback(() => {
+    speechRef.current?.stop();
+    speechRef.current = null;
+    setIsListening(false);
     setOpen(false);
     setWelcoming(false);
     setFocused(false);
@@ -208,8 +252,47 @@ export default function BeariWidget({
       setStatus("idle");
     }
 
-    fabRef.current?.focus();
+    fabRef.current?.focus({ preventScroll: true });
   }, [clearTimers]);
+
+  const toggleVoice = useCallback(() => {
+    if (speechRef.current) {
+      speechRef.current.stop();
+      return;
+    }
+    const speechWindow = window as SpeechWindow;
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceError("Voice input is not supported in this browser. You can type your message instead.");
+      return;
+    }
+
+    setVoiceError(null);
+    const recognition = new Recognition();
+    recognition.lang = navigator.language || "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results).slice(event.resultIndex).filter((result) => result.isFinal).map((result) => result[0].transcript.trim()).filter(Boolean).join(" ");
+      if (transcript) setInput((current) => [current.trim(), transcript].filter(Boolean).join(" "));
+    };
+    recognition.onerror = (event) => {
+      setVoiceError(event.error === "not-allowed" || event.error === "service-not-allowed" ? "Allow microphone access in your browser to use voice input." : "I couldn't hear that clearly. Please try again or type your message.");
+    };
+    recognition.onend = () => {
+      speechRef.current = null;
+      setIsListening(false);
+    };
+    speechRef.current = recognition;
+    setIsListening(true);
+    try {
+      recognition.start();
+    } catch {
+      speechRef.current = null;
+      setIsListening(false);
+      setVoiceError("Voice input couldn't start. Please try again or type your message.");
+    }
+  }, []);
 
   const submit = useCallback(
     async (text: string, retry = false) => {
@@ -218,6 +301,9 @@ export default function BeariWidget({
       if (!message || requestInProgress.current) return;
 
       clearTimers();
+      speechRef.current?.stop();
+      speechRef.current = null;
+      setIsListening(false);
 
       requestInProgress.current = true;
       setFailedText(null);
@@ -298,6 +384,18 @@ export default function BeariWidget({
 
   return (
     <div className="beari-root">
+      {!open && welcomeVisible && (
+        <div className="beari-welcome" role="status">
+          <button type="button" className="beari-welcome-message" onClick={openChat} aria-label="Open Beari chat">
+            <span className="beari-welcome-title"><span className="beari-welcome-dot" /> Beari <span className="beari-welcome-time">HERE TO HELP</span></span>
+            <span className="beari-welcome-copy">{greeting}</span>
+            <span className="beari-welcome-cta">Chat with me <span aria-hidden="true">→</span></span>
+          </button>
+          <button type="button" className="beari-welcome-close" onClick={() => setWelcomeVisible(false)} aria-label="Dismiss Beari welcome message">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+      )}
       {open && (
         <BeariChat
           messages={messages}
@@ -325,6 +423,10 @@ export default function BeariWidget({
               void submit(failedText, true);
             }
           }}
+          onToggleVoice={toggleVoice}
+          isListening={isListening}
+          voiceError={voiceError}
+          onFeedbackSubmit={(rating, feedback) => sendBeariFeedback({ rating, feedback })}
           onClose={closeChat}
         />
       )}

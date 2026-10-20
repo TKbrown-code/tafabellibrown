@@ -65,3 +65,8 @@ export async function sendBeariMessage(
   };
 }
 
+export async function sendBeariFeedback(payload: { rating: number; feedback: string }): Promise<void> {
+  const { data } = await Beari.post<{ success: boolean }>("/ai/visitor/feedback", payload);
+  if (data.success !== true) throw new Error("Beari feedback could not be saved.");
+}
+

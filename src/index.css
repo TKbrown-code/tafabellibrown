@@ -20,6 +20,7 @@
   --color-surface: hsl(var(--surface));
   --color-surface-2: hsl(var(--surface-2));
   --color-border: hsl(var(--border));
+  --color-border-strong: hsl(var(--border-strong));
   --color-ink: hsl(var(--ink));
   --color-muted: hsl(var(--muted));
   --color-faint: hsl(var(--faint));
@@ -63,6 +64,29 @@
   }
 }
 
+/* Keep fenced article code readable while inline code uses the current theme surface. */
+.article-prose pre {
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: #11151f !important;
+  color: #e5e7eb;
+}
+
+.article-prose pre code {
+  display: block;
+  padding: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  color: #e5e7eb !important;
+  white-space: pre;
+}
+
+.article-prose pre code::before,
+.article-prose pre code::after {
+  content: none !important;
+}
+
 @utility section {
   @apply py-20 md:py-28;
   scroll-margin-top: 4.5rem;
@@ -101,7 +125,7 @@
 }
 
 @utility input {
-  @apply w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-hidden focus:ring-4 focus:ring-accent/10;
+  @apply w-full rounded-xl border border-border-strong bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-hidden focus:ring-4 focus:ring-accent/10;
 }
 
 @utility label {
@@ -118,9 +142,10 @@
     --surface: 0 0% 100%;
     --surface-2: 40 18% 94%;
     --border: 35 12% 86%;
+    --border-strong: 222 8% 50%;
     --ink: 224 32% 12%;
     --muted: 222 9% 38%;
-    --faint: 222 7% 58%;
+    --faint: 222 8% 42%;
     --accent: 224 68% 36%;
     --accent-hover: 224 72% 29%;
     --accent-soft: 222 70% 95%;
@@ -135,9 +160,10 @@
     --surface: 224 20% 10%;
     --surface-2: 224 18% 13%;
     --border: 224 14% 19%;
+    --border-strong: 224 10% 45%;
     --ink: 220 20% 93%;
     --muted: 222 10% 66%;
-    --faint: 222 8% 48%;
+    --faint: 222 9% 58%;
     --accent: 220 88% 70%;
     --accent-hover: 220 92% 78%;
     --accent-soft: 224 40% 16%;

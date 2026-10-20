@@ -1,5 +1,5 @@
 // Static profile content. Edit here — this rarely changes, so it lives in code.
-// Projects, blog posts, skills and messages live in Supabase (with this file's seed as fallback).
+// Projects, blog posts, skills and messages are loaded through the portfolio API.
 
 export const site = {
   name: "Tafa Belli Brown",
@@ -58,5 +58,5 @@ export const site = {
   tools: ["Git", "GitHub", "Docker", "Vercel", "Cloudflare", "Postman", "Figma", "VS Code"],
 };
 
-export type Lang = "en" | "zh";
-export type L = { en: string; zh: string };
+export type Lang = "en" | "fr" | "zh" | "es" | "ar" | "pcm";
+export type L = { en: string; zh: string; fr?: string; es?: string; ar?: string; pcm?: string };

@@ -16,13 +16,15 @@ const CATS: { id: SkillCategory; key: DictKey }[] = [
 function Skills() {
   const { t } = useI18n();
   const { data, isLoading } = useSkills();
+  const primarySkills = (data ?? []).filter((skill) => skill.is_primary).sort((a, b) => a.sort_order - b.sort_order);
   return (
-    <section id="skills" className="section">
+    <section id="skills" className="section border-t border-border">
       <div className="container">
         <Reveal>
           <p className="kicker">{t("skills_kicker")}</p>
           <h2 className="h-section">{t("skills_title")}</h2>
         </Reveal>
+        {!isLoading && primarySkills.length > 0 && <div className="mt-8"><h3 className="text-sm font-bold">Primary stack</h3><div className="mt-3 flex flex-wrap gap-2">{primarySkills.map((skill) => <span key={skill.id} className="rounded-lg bg-accent-soft px-3 py-1.5 text-sm font-semibold text-accent">{skill.name}</span>)}</div></div>}
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CATS.map((c, i) => (
             <Reveal key={c.id} delay={i * 0.05}>
@@ -31,9 +33,7 @@ function Skills() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {isLoading
                     ? [1, 2, 3, 4].map((k) => <Skeleton key={k} className="h-7 w-20 rounded-full" />)
-                    : data?.filter((s) => s.category === c.id).map((s) => (
-                        <span key={s.id} className="rounded-lg bg-surface-2 px-2.5 py-1 text-sm text-ink">{s.name}</span>
-                      ))}
+                    : data?.filter((s) => s.category === c.id && !s.is_primary).sort((a, b) => a.sort_order - b.sort_order).map((s) => <span key={s.id} className="rounded-lg bg-surface-2 px-2.5 py-1 text-sm text-ink">{s.name}</span>)}
                 </div>
               </div>
             </Reveal>

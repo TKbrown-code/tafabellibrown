@@ -1,77 +1,92 @@
-# Tafa Belli Brown — Portfolio
+# Portfolio frontend
 
-Personal portfolio and CMS built with **React + TypeScript (Vite)**, **Tailwind CSS** and **Supabase**.
+The frontend is a responsive, multilingual portfolio and admin dashboard built with React 18, TypeScript, Vite, Tailwind CSS v4, React Router, and TanStack Query. It is a browser client: trusted database operations, provider credentials, and email delivery belong to the backend API.
 
 ## Features
 
-- Single-page home: Hero, About, Skills, Projects, Experience, Blog, Contact
-- Case-study page per project (`/projects/:slug`) and a blog (`/blog`, `/blog/:slug`) written in Markdown
-- English / 中文 language toggle (UI strings and all content fields)
-- Light / dark theme (follows the system, remembers your choice)
-- Downloadable résumé (`public/resume`)
-- Contact form → stored in Supabase `messages`
-- Admin CMS at `/admin` (Supabase Auth): inbox, projects, blog posts, skills
-- **Demo mode**: with no Supabase env vars, the site runs on seed data in memory (admin password: `demo`)
+- Public portfolio pages for projects, services, and blog posts, with localized content and page metadata.
+- Responsive home-page sections, including a profile-photo hero and contact form with Turnstile verification.
+- Beari assistant chat for visitors and authenticated admins.
+- Admin tools for portfolio content, messages, notifications, analytics, résumé editing, and site settings.
+- Admin Beari chat supports image attachments. JPG, PNG, and WebP images (up to 4 MB) are stored in a private Supabase Storage bucket, and authenticated chat history can reopen them. Apply the backend migration documented in `../backend/README.md` before enabling image uploads.
 
-## Stack
+## Local development
 
-| Layer    | Choice |
-| -------- | ------ |
-| UI       | React 18, TypeScript, Tailwind CSS 3, Framer Motion, lucide-react |
-| Data     | Supabase (Postgres + Auth + RLS) via `@supabase/supabase-js`, TanStack Query |
-| Routing  | React Router (browser routing in production, hash routing for sandboxed previews) |
-| Hosting  | Vercel (`vercel.json` rewrites all routes to `index.html`) |
-
-## Project structure
-
-```
-src/
-  data/site.ts      ← profile, experience, education (edit directly)
-  data/seed.ts      ← default projects, posts, skills (demo mode + seed.sql source)
-  lib/api.ts        ← data layer: Supabase or in-memory demo store
-  lib/i18n.tsx      ← EN/中文 dictionary + language context
-  lib/theme.tsx     ← light/dark theme
-  pages/Home.tsx    ← all home sections
-  pages/Content.tsx ← case study, blog index, blog post, 404
-  admin/Admin.tsx   ← CMS (login, messages, projects, posts, skills)
-supabase/
-  schema.sql        ← tables + row-level security
-  seed.sql          ← generated from src/data/seed.ts (npm run seed:sql)
-```
-
-## Run locally
-
-```bash
+```powershell
+cd portfolio
 npm install
-cp .env.example .env.local   # optional — leave empty to use demo mode
 npm run dev
 ```
 
-## Connect Supabase
+Vite serves the app at `http://localhost:5173` and proxies `/api` to `http://localhost:5000`. Set `VITE_API_PROXY_TARGET` to point at another API during development.
 
-1. Create a project at supabase.com.
-2. SQL Editor → run `supabase/schema.sql`, then `supabase/seed.sql`.
-3. Authentication → Users → **Add user** with your email and password. Under Authentication → Providers → Email, turn off **Allow new users to sign up**.
-4. Make yourself admin:
-   ```sql
-   insert into public.admins (user_id) select id from auth.users where email = 'email@gmail.com';
-   ```
-5. Project Settings → API → copy the URL and `anon` key into `.env.local`:
-   ```
-   VITE_SUPABASE_URL=...
-   VITE_SUPABASE_ANON_KEY=...
-   ```
+Build and type-check with:
 
-The anon key is safe in the browser — row-level security only lets the public read published content and insert messages. Everything else requires a signed-in admin.
+```powershell
+npm run build
+```
 
-## Deploy to Vercel
+For a static preview, run `npm run preview` after building. `npm run build:preview` builds the optional hash-router variant.
 
-1. Push this repo to GitHub and import it in Vercel (framework: Vite).
-2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables.
-3. Deploy. Build command `npm run build`, output `dist`.
+## Routes
 
-## To-do before launch
+| Path | Page |
+| --- | --- |
+| `/` | Home page and portfolio sections |
+| `/projects` | Project collection |
+| `/projects/:slug` | Project case study |
+| `/services` | Services listing |
+| `/blog` | Published posts |
+| `/blog/:slug` | Blog post |
+| Admin workspace path | Authenticated CMS dashboard (configured in `src/lib/admin-route.ts`) |
 
-- Add your GitHub and LinkedIn URLs in `src/data/site.ts` (icons appear automatically).
-- Review the two starter blog posts in `/admin` → Blog and edit them in your own voice.
-- Optional: add a profile photo, custom domain, and Supabase email notifications (Database Webhook → Edge Function) for new messages.
+The frontend uses clean browser URLs by default. `vercel.json` contains production rewrite support. `VITE_ROUTER=hash` switches to a hash router for hosts that do not provide SPA rewrites.
+
+The repository overview remains in the root `README.md`; backend setup and API operations are documented in `../backend/README.md`.
+
+## Application structure
+
+```text
+src/App.tsx                      Providers, router, route-level lazy loading
+src/pages/                       Project, service, blog, and not-found pages
+src/sections/home/               Home page sections
+src/components/shared/           Layout, accessible shared presentation
+src/components/beari/            Visitor assistant widget, chat, and mascot
+src/admin/Admin.tsx              Admin shell, navigation, auth-gated panels
+src/admin/ContentPanels.tsx      Projects, posts, services, and skills editing
+src/admin/CommunicationPanels.tsx Messages, email, and notifications
+src/admin/DashboardPanels.tsx    Overview, calendar, and admin management
+src/admin/ResumeAndBeariPanels.tsx Résumé tools and Beari settings
+src/admin/AdminChat.tsx          Shared chat UI, image preview, and chat controls
+src/lib/api.ts                   Typed HTTP client and API operations
+src/lib/i18n.tsx                 Locale selection and translation helpers
+src/lib/theme.tsx                Theme state
+src/index.css                    Design tokens, typography, and global styles
+```
+
+## Data flow and configuration
+
+- API calls use the Axios clients in `src/lib/api.ts` and target the same-origin `/api` prefix.
+- Admin pages authenticate through the API; the browser does not receive a Supabase service-role or secret key.
+- Admin chat images use authenticated backend upload and read endpoints. Do not replace these with public URLs or expose storage credentials in the browser.
+- Public and admin content comes from the backend. Local seed data is a development/fallback source for selected portfolio data, not the production content store.
+- Supported locales are English, French, Chinese, Spanish, Arabic, and Nigerian Pidgin. Locale-specific content is selected through the shared i18n helpers.
+- Theme colors and typography are CSS custom properties in `src/index.css`; the dark theme uses the same token names with adjusted values.
+- Configure `VITE_TURNSTILE_SITE_KEY` for the admin sign-in widget. Only public browser-safe values should use the `VITE_` prefix.
+
+## Editing guidance
+
+- Keep reusable API behavior in `src/lib/api.ts` and display components in `src/components/`.
+- Prefer existing design tokens and shared `input`, `btn`, `card`, `label`, and typography utilities over one-off styles.
+- Keep visitor-facing claims grounded in published portfolio data.
+- Use semantic labels and accessible names for form controls and icon-only buttons.
+- Admin-generated text suggestions should remain reviewable and must not silently overwrite content.
+- Avoid adding provider secrets or server-only logic to this package.
+
+## Deployment
+
+Deploy this folder to Vercel with `npm run build` and `dist` as the output directory. Set the frontend’s production API routing/environment as appropriate for the deployment. Backend deployment and database setup are documented in `../backend/README.md`.
+
+## License
+
+This frontend is distributed under the MIT License. See [`LICENSE`](./LICENSE) for the copyright notice and license terms.
