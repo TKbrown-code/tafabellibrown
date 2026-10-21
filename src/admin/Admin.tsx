@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowLeft, Bot, CalendarDays, Clock3, FileText, FolderKanban, ImagePlus, Inbox, LayoutDashboard, Loader2, LogOut, Settings, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { Activity, ArrowLeft, Bot, CalendarDays, Clock3, FileText, FolderKanban, ImagePlus, Inbox, LayoutDashboard, Loader2, LogOut, Menu, Settings, ShieldCheck, Sparkles, UserRound, X } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle, useTitle } from "@/components/shared/Layout";
 import { fetchAdminApiLogs, fetchAdminNotifications, fetchCurrentAdmin, markAdminNotificationRead, markAllAdminNotificationsRead } from "@/lib/api";
@@ -16,6 +16,7 @@ import { AdminAssistantPanel, BeariSettingsPanel, ResumePanel } from "./ResumeAn
 import { ProfilePanel } from "./ProfilePanel";
 import { BlogAutomationPanel } from "./BlogAutomationPanel";
 import { safeStorage } from "@/lib/storage";
+import { useModal } from "@/hooks/useModal";
 import "./admin-chat.css";
 import { Login, useAuth, type Tab } from "./shared";
 
@@ -31,6 +32,7 @@ export default function Admin() {
 
   const auth = useAuth();
   const qc = useQueryClient();
+  const { showModal } = useModal();
   const { theme } = useTheme();
   const { data: profileSettings = defaultSiteSettings } = useSiteSettings();
   const authUserId = auth.user && "id" in auth.user ? auth.user.id : null;
@@ -41,6 +43,8 @@ export default function Admin() {
   });
   const isSuperAdmin = adminProfile.data?.role === "superAdmin";
   const [tab, setTab] = useState<Tab>("overview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const savedWidth = Number(safeStorage.get(SIDEBAR_WIDTH_KEY));
     return Number.isFinite(savedWidth) && savedWidth >= SIDEBAR_MIN_WIDTH && savedWidth <= SIDEBAR_MAX_WIDTH
@@ -49,9 +53,40 @@ export default function Admin() {
   });
   const [resizingSidebar, setResizingSidebar] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [apiLogsLive, setApiLogsLive] = useState(false);
+  const [markAllPending, setMarkAllPending] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => {
+      setIsMobileViewport(media.matches);
+      if (!media.matches) setMobileMenuOpen(false);
+    };
+    syncViewport();
+    media.addEventListener("change", syncViewport);
+    return () => media.removeEventListener("change", syncViewport);
+  }, []);
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+    if (isMobileViewport && !mobileMenuOpen) sidebar.setAttribute("inert", "");
+    else sidebar.removeAttribute("inert");
+  }, [isMobileViewport, mobileMenuOpen]);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileMenuOpen]);
   const notificationsQuery = useInfiniteQuery({
     queryKey: ["admin-notifications"],
     enabled: Boolean(auth.user),
@@ -64,13 +99,10 @@ export default function Admin() {
     },
     refetchInterval: 60_000,
   });
-  const apiLogsQuery = useInfiniteQuery({
+  const apiLogsQuery = useQuery({
     queryKey: ["admin-api-logs"],
     enabled: Boolean(auth.user) && tab === "api-logs",
-    queryFn: ({ pageParam }) => fetchAdminApiLogs(pageParam),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage.length === 100 ? pages.length * 100 : undefined,
+    queryFn: fetchAdminApiLogs,
     refetchInterval: tab === "api-logs" ? 30_000 : false,
   });
   const notifications = [...new Map((notificationsQuery.data?.pages.flat() ?? []).map((notification: AdminNotification) => [notification.id, notification])).values()];
@@ -112,7 +144,15 @@ export default function Admin() {
   }, [auth.user, qc, tab]);
   const selectNotification = (notification: AdminNotification) => {
     if (notification.id) {
-      void markAdminNotificationRead(notification.id).finally(() => void qc.invalidateQueries({ queryKey: ["admin-notifications"] }));
+      const previous = qc.getQueryData<typeof notificationsQuery.data>(["admin-notifications"]);
+      qc.setQueryData(["admin-notifications"], (current: typeof notificationsQuery.data) => current ? {
+        ...current,
+        pages: current.pages.map((page: AdminNotification[]) => page.map((item: AdminNotification) => item.id === notification.id ? { ...item, read_at: item.read_at || new Date().toISOString() } : item)),
+      } : current);
+      void markAdminNotificationRead(notification.id).catch((error) => {
+        qc.setQueryData(["admin-notifications"], previous);
+        showModal({ type: "error", title: "Could not update notification", description: (error as Error).message || "Please try again." });
+      }).finally(() => void qc.invalidateQueries({ queryKey: ["admin-notifications"] }));
     }
     if (notification.category === "message") {
       void qc.invalidateQueries({ queryKey: ["admin", "messages"] });
@@ -122,8 +162,24 @@ export default function Admin() {
       setTab("overview");
     }
   };
-  const markAllNotificationsRead = () => {
-    void markAllAdminNotificationsRead().finally(() => void qc.invalidateQueries({ queryKey: ["admin-notifications"] }));
+  const markAllNotificationsRead = async () => {
+    if (markAllPending || unread === 0) return;
+    const previous = qc.getQueryData<typeof notificationsQuery.data>(["admin-notifications"]);
+    setMarkAllPending(true);
+    qc.setQueryData(["admin-notifications"], (current: typeof notificationsQuery.data) => current ? {
+      ...current,
+      pages: current.pages.map((page: AdminNotification[]) => page.map((item: AdminNotification) => ({ ...item, read_at: item.read_at || new Date().toISOString() }))),
+    } : current);
+    try {
+      await markAllAdminNotificationsRead();
+      showModal({ type: "success", title: "Notifications updated", description: "All notifications are marked as read." });
+    } catch (error) {
+      qc.setQueryData(["admin-notifications"], previous);
+      showModal({ type: "error", title: "Could not update notifications", description: (error as Error).message || "Please try again." });
+    } finally {
+      setMarkAllPending(false);
+      void qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    }
   };
   useEffect(() => {
     safeStorage.set(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
@@ -168,20 +224,21 @@ export default function Admin() {
 
   return (
     <div ref={layoutRef} style={{ "--admin-sidebar-width": `${sidebarWidth}px` } as CSSProperties} className={`${theme === "dark" ? "dark" : ""} ${chatActive ? "grid h-dvh min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden md:grid-rows-[minmax(0,1fr)]" : "min-h-screen"} bg-bg text-ink md:grid md:grid-cols-[var(--admin-sidebar-width)_minmax(0,1fr)]`}>
-      <aside className="relative border-b border-border bg-surface md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r">
-        <div className="flex items-center gap-2.5 px-5 py-5"><Logo className="h-7 w-7" /><div><p className="text-sm font-bold leading-tight">Portfolio CMS</p><p className="text-[11px] text-muted">Connected API</p></div></div>
-        <nav className="admin-nav-scroll flex gap-1 overflow-x-auto px-3 pb-3 md:max-h-[calc(100vh-10rem)] md:flex-col md:gap-0 md:overflow-y-auto md:pb-6" aria-label="Admin navigation">
+      <button type="button" className={`fixed inset-0 z-[60] bg-black/55 backdrop-blur-[2px] transition-opacity duration-300 md:hidden ${mobileMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden={!mobileMenuOpen} tabIndex={mobileMenuOpen ? 0 : -1} aria-label="Close navigation menu" onClick={() => setMobileMenuOpen(false)} />
+      <aside ref={sidebarRef} id="admin-sidebar-navigation" aria-hidden={isMobileViewport && !mobileMenuOpen} className={`fixed inset-y-0 left-0 z-[70] flex h-dvh w-[min(20rem,88vw)] flex-col overflow-y-auto border-r border-border bg-surface shadow-lift transition-transform duration-300 ease-out md:sticky md:top-0 md:h-screen md:w-auto md:translate-x-0 md:overflow-visible md:shadow-none ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex shrink-0 items-center gap-2.5 px-5 py-5"><Logo className="h-7 w-7" /><div className="min-w-0 flex-1"><p className="text-sm font-bold leading-tight">Portfolio CMS</p><p className="text-[11px] text-muted">Connected API</p></div><button type="button" onClick={() => setMobileMenuOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted transition-colors hover:bg-surface-2 hover:text-ink md:hidden" aria-label="Close navigation menu"><X className="h-4 w-4" /></button></div>
+        <nav className="admin-nav-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 md:max-h-[calc(100vh-10rem)] md:gap-0 md:pb-6" aria-label="Admin navigation">
           {navSections.map((section, index) => (
-            <div key={section.label} className={`contents md:block md:space-y-1 ${index ? "md:mt-4" : ""}`}>
-              <p className="hidden px-3 pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-faint md:block">{section.label}</p>
+            <div key={section.label} className={`space-y-1 ${index ? "mt-5 md:mt-4" : ""}`}>
+              <p className="px-3 pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-faint">{section.label}</p>
               {section.tabs.map((t) => (
-                <button key={t.id} onClick={() => setTab(t.id)} data-testid={`tab-${t.id}`} className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors md:w-full ${tab === t.id ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-surface-2 hover:text-ink"}`}>
+                <button key={t.id} onClick={() => { setTab(t.id); setMobileMenuOpen(false); }} data-testid={`tab-${t.id}`} className={`flex w-full shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${tab === t.id ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-surface-2 hover:text-ink"}`}>
                   {t.icon} {t.label}
                 </button>
               ))}
             </div>
           ))}
-          <button onClick={auth.signOut} className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted md:hidden"><LogOut className="h-4 w-4" /> Sign out</button>
+          <button onClick={auth.signOut} className="mt-5 flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted md:hidden"><LogOut className="h-4 w-4" /> Sign out</button>
         </nav>
         <div className="hidden px-3 md:absolute md:bottom-4 md:left-0 md:right-0 md:block">
           <p className="truncate px-3 pb-2 text-[11px] text-faint">{auth.user.email}</p>
@@ -222,14 +279,14 @@ export default function Admin() {
           <span className="h-10 w-1 rounded-full bg-border transition-colors group-hover:bg-accent group-focus-visible:bg-accent" />
         </div>
       </aside>
-      <main className={`mx-auto w-full ${chatActive ? "h-full min-h-0 min-w-0 max-w-none overflow-hidden px-5 py-4 md:px-10 md:py-4" : "max-w-7xl px-5 py-8 md:px-10 md:py-10"} ${chatActive ? "flex flex-col" : ""}`}>
-        <div className={`${chatActive ? "mb-3 shrink-0 pb-3" : "mb-8 pb-5"} flex flex-wrap items-center justify-between gap-3 border-b border-border`}><div><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">Portfolio control center</p><p className="mt-1 text-sm text-muted">Welcome back, {adminProfile.data?.name || auth.user.email || "Admin"}</p></div><div className="flex items-center gap-2"><Link to="/" aria-label="Home" className="btn-ghost btn-sm" data-testid="link-admin-home"><ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Home</span></Link><NotificationsMenu notifications={menuNotifications} unreadCount={unread} isLive={realtimeConnected} hasError={notificationsQuery.isError} onSelect={selectNotification} onMarkAll={markAllNotificationsRead} /><ThemeToggle /><button type="button" onClick={() => setTab("profile")} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open my profile" title="My profile"><img src={profileSettings.profileImageUrl} alt="My profile" className="h-9 w-9 rounded-full border border-border object-cover" /></button></div></div>
+      <main className={`mx-auto min-w-0 w-full ${chatActive ? "h-full min-h-0 max-w-none overflow-hidden px-2 py-2 sm:px-4 sm:py-3 md:px-10 md:py-4" : "max-w-7xl px-4 py-6 sm:px-5 sm:py-8 md:px-10 md:py-10"} ${chatActive ? "flex flex-col" : ""}`}>
+        <div className={`${chatActive ? "mb-2 shrink-0 pb-2 sm:mb-3 sm:pb-3" : "mb-8 pb-5"} flex flex-wrap items-center justify-between gap-2 border-b border-border`}><div className={`${chatActive ? "hidden md:block" : "min-w-0"}`}><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">Portfolio control center</p><p className="mt-1 text-sm text-muted">Welcome back, {adminProfile.data?.name || auth.user.email || "Admin"}</p></div><div className="ml-auto flex items-center gap-1.5 sm:gap-2"><button type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Open navigation menu" aria-expanded={mobileMenuOpen} aria-controls="admin-sidebar-navigation" title="Open menu" className="btn-ghost btn-sm md:hidden"><Menu className="h-4 w-4" /><span className="sr-only">Menu</span></button>{chatActive && <button type="button" onClick={() => setTab("overview")} className="btn-ghost btn-sm md:hidden"><LayoutDashboard className="h-3.5 w-3.5" /><span>Dashboard</span></button>}<Link to="/" aria-label="Home" onClick={() => setMobileMenuOpen(false)} className="btn-ghost btn-sm" data-testid="link-admin-home"><ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Home</span></Link><NotificationsMenu notifications={menuNotifications} unreadCount={unread} isLive={realtimeConnected} hasError={notificationsQuery.isError} onSelect={selectNotification} onMarkAll={markAllNotificationsRead} markAllPending={markAllPending} /><ThemeToggle /><button type="button" onClick={() => { setTab("profile"); setMobileMenuOpen(false); }} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open my profile" title="My profile"><img src={profileSettings.profileImageUrl} alt="My profile" className="h-9 w-9 rounded-full border border-border object-cover" /></button></div></div>
         {tab === "overview" && <OverviewPanel notifications={notifications} onLoadMoreActivities={() => void notificationsQuery.fetchNextPage()} hasMoreActivities={Boolean(notificationsQuery.hasNextPage)} isLoadingMoreActivities={notificationsQuery.isFetchingNextPage} onOpenCalendar={() => setTab("calendar")} onOpenApiLogs={() => setTab("api-logs")} onSelectActivity={selectNotification} />}
         {tab === "calendar" && <CalendarPanel adminEmail={auth.user.email ?? ""} />}
         {tab === "settings" && <SettingsPanel />}
         {tab === "profile" && <ProfilePanel profile={adminProfile.data} onProfileUpdated={(updated) => { qc.setQueryData(["current-admin", authUserId], updated); void qc.invalidateQueries({ queryKey: ["current-admin"] }); }} />}
         {tab === "messages" && <MessagesPanel initialMessageId={selectedMessageId} />}
-        {tab === "api-logs" && <ApiLogsPanel logs={[...new Map((apiLogsQuery.data?.pages.flat() ?? []).map((log) => [log.id, log])).values()]} isLive={apiLogsLive} isLoading={apiLogsQuery.isFetching} isLoadingMore={apiLogsQuery.isFetchingNextPage} hasMore={Boolean(apiLogsQuery.hasNextPage)} hasError={apiLogsQuery.isError} onRefresh={() => void apiLogsQuery.refetch()} onLoadMore={() => void apiLogsQuery.fetchNextPage()} />}
+        {tab === "api-logs" && <ApiLogsPanel logs={apiLogsQuery.data ?? []} isLive={apiLogsLive} isLoading={apiLogsQuery.isFetching} hasError={apiLogsQuery.isError} onRefresh={() => void apiLogsQuery.refetch()} />}
         {tab === "projects" && <ProjectsPanel />}
         {tab === "posts" && <PostsPanel />}
         {tab === "blog-schedule" && isSuperAdmin && <BlogAutomationPanel />}

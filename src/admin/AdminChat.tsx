@@ -177,7 +177,7 @@ export function AdminChat({
       }}
     >
       {draggingImage && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-bg/80 text-sm font-medium text-accent">Drop a JPG, PNG, or WebP image</div>}
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-2.5 sm:px-5 sm:py-3">
         <div className="flex min-w-0 items-center gap-3">
           {headerIcon}
           <div className="min-w-0">
@@ -195,30 +195,30 @@ export function AdminChat({
           const el = e.currentTarget;
           nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
         }}
-        className="admin-chat-scroll relative min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-5"
+        className="admin-chat-scroll relative min-h-0 min-w-0 flex-1 space-y-4 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-3 sm:px-5 sm:py-5"
       >
         {messages.length === 0 && !sending && welcomeMessage && (
-          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center gap-5 py-8 text-center">
+          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center gap-4 py-5 text-center sm:gap-5 sm:py-8">
             {welcomeIcon && <div className="mb-1 drop-shadow-[0_12px_28px_rgba(59,104,220,0.2)]">{welcomeIcon}</div>}
-            <div className="max-w-xl"><h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{welcomeTitle || "Welcome back"}</h2><p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">{welcomeMessage}</p></div>
-            {!!suggestions.length && <div className="w-full max-w-2xl pt-2"><div className="mb-3 flex items-center justify-center gap-1.5 text-xs font-medium text-muted"><Sparkles className="h-3.5 w-3.5 text-accent" />A few ways I can help</div><div className="flex flex-wrap justify-center gap-2.5">{suggestions.map((suggestion) => <button key={suggestion} type="button" disabled={sending} onClick={() => onSuggestion?.(suggestion)} className="group inline-flex items-center gap-1.5 rounded-2xl border border-border bg-surface px-4 py-2.5 text-left text-xs text-ink transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent sm:text-sm"><span>{suggestion}</span><ArrowUpRight className="h-3 w-3 shrink-0 opacity-50 transition-opacity group-hover:opacity-100" /></button>)}</div></div>}
+            <div className="max-w-xl px-1"><h2 className="font-display text-xl font-bold tracking-tight sm:text-3xl">{welcomeTitle || "Welcome back"}</h2><p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">{welcomeMessage}</p></div>
+            {!!suggestions.length && <div className="w-full max-w-2xl pt-1 sm:pt-2"><div className="mb-3 flex items-center justify-center gap-1.5 text-xs font-medium text-muted"><Sparkles className="h-3.5 w-3.5 text-accent" />A few ways I can help</div><div className="flex flex-wrap justify-center gap-2">{suggestions.map((suggestion) => <button key={suggestion} type="button" disabled={sending} onClick={() => onSuggestion?.(suggestion)} className="group inline-flex max-w-full items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-2 text-left text-xs text-ink transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent sm:px-4 sm:py-2.5 sm:text-sm"><span>{suggestion}</span><ArrowUpRight className="h-3 w-3 shrink-0 opacity-50 transition-opacity group-hover:opacity-100" /></button>)}</div></div>}
           </div>
         )}
         {messages.map((m) => (
           <div key={m.id} data-msg-id={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
             {m.role === "user" ? (
-              <div className="flex max-w-[80%] flex-col items-end gap-2">
+              <div className="flex max-w-[88%] flex-col items-end gap-2 sm:max-w-[80%]">
                 {m.imagePreview && <button type="button" onClick={() => setOpenImage(m.imagePreview ?? null)} className="block max-w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open attached image">
                   <img src={m.imagePreview} alt="Image attached to message" className="max-h-40 max-w-[240px] rounded-lg object-contain" />
                 </button>}
-                {visibleMessageContent(m.content) && <p className="max-w-full whitespace-pre-wrap rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-sm text-accent-ink">{visibleMessageContent(m.content)}</p>}
+                {visibleMessageContent(m.content) && <p className="max-w-full break-words whitespace-pre-wrap rounded-2xl rounded-br-md bg-accent px-3 py-2.5 text-sm text-accent-ink sm:px-4">{visibleMessageContent(m.content)}</p>}
               </div>
             ) : (
-              <div className="flex max-w-[94%] items-end gap-2">
+              <div className="flex min-w-0 max-w-[98%] items-end gap-1.5 sm:max-w-[94%] sm:gap-2">
                 {messageAvatar}
-                <div className="min-w-0">
-                  <div className="rounded-2xl rounded-bl-md border border-border bg-surface-2/50 px-4 py-3">
-                    <BeariMarkdown>{m.content}</BeariMarkdown>
+                <div className="min-w-0 max-w-full flex-1">
+                  <div className="min-w-0 max-w-full break-words px-3 py-3 sm:px-4">
+                    <BeariMarkdown allowImages className="text-ink">{m.content}</BeariMarkdown>
                   </div>
                   {latestMessage?.id === m.id && <div className="mt-1 flex items-center gap-1">
                     {m.retryable && onRetry ? (
@@ -243,7 +243,7 @@ export function AdminChat({
         )}
       </div>
 
-      <form onSubmit={onSubmit} className="shrink-0 border-t border-border p-4">
+      <form onSubmit={onSubmit} className="shrink-0 border-t border-border p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:p-4">
         {image && imagePreview && <div className="mb-3 flex items-start">
           <div className="relative h-[76px] w-[76px] overflow-hidden rounded-xl border border-border bg-surface" title={image.name}>
             <img src={imagePreview} alt={`Image ready to send: ${image.name}`} className="h-full w-full object-cover" />
@@ -251,9 +251,9 @@ export function AdminChat({
           </div>
         </div>}
         {(imageError || copyError) && <p role="alert" className="mb-2 text-xs text-danger">{imageError || copyError}</p>}
-        <div className="flex items-end gap-2 sm:gap-3">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2 sm:flex sm:gap-3">
           <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={sending} onChange={(event) => selectImage(event.target.files?.[0])} aria-label="Attach an image" />
-          <button type="button" className="grid h-11 w-10 shrink-0 place-items-center rounded-full text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50" disabled={sending} onClick={() => imageInputRef.current?.click()} aria-label="Attach image" title="Attach a JPG, PNG, or WebP image"><ImagePlus className="h-5 w-5" /></button>
+          <button type="button" className="col-start-1 row-start-2 grid h-10 w-9 shrink-0 place-items-center rounded-full text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 sm:col-auto sm:row-auto sm:h-11 sm:w-10" disabled={sending} onClick={() => imageInputRef.current?.click()} aria-label="Attach image" title="Attach a JPG, PNG, or WebP image"><ImagePlus className="h-5 w-5" /></button>
           <textarea
             ref={taRef}
             value={text}
@@ -263,15 +263,15 @@ export function AdminChat({
             onKeyDown={onKey}
             placeholder={`Message ${title}…`}
             aria-label={`Message ${title}`}
-            className="input admin-chat-input max-h-[200px] min-w-0 flex-1 resize-none"
+            className="input admin-chat-input col-span-2 col-start-1 row-start-1 max-h-[160px] min-h-11 w-full min-w-0 resize-none px-3 py-2.5 sm:col-auto sm:row-auto sm:max-h-[200px] sm:flex-1"
           />
-          <button type="submit" className="btn-primary h-11 w-11 shrink-0 p-0" disabled={(!text.trim() && !image) || sending} aria-label="Send message">
+          <button type="submit" className="btn-primary col-start-3 row-start-1 h-11 w-11 shrink-0 p-0" disabled={(!text.trim() && !image) || sending} aria-label="Send message">
             <Send className="h-4 w-4" />
           </button>
-          {composerActions}
+          <div className="col-span-2 col-start-2 row-start-2 flex min-w-0 items-center justify-end gap-1 sm:contents">{composerActions}</div>
         </div>
-        <div className="mt-2 flex justify-between text-xs text-faint">
-          <span>Enter to send · Shift+Enter for a new line</span>
+        <div className="mt-1.5 flex flex-wrap justify-between gap-x-2 gap-y-1 text-[10px] text-faint sm:mt-2 sm:text-xs">
+          <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span>
           <span>{text.length} / {maxLength.toLocaleString()}</span>
         </div>
       </form>

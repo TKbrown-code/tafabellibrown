@@ -7,10 +7,11 @@ import { Reveal, Skeleton } from "@/components/shared/ui";
 import { ProjectCard } from "@/sections/home/projectCards";
 
 export function Projects() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { data, isLoading } = useProjects();
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
+    direction: lang === "ar" ? "rtl" : "ltr",
     align: "start",
     loop: false,
     dragFree: false,
@@ -65,7 +66,7 @@ export function Projects() {
                   aria-label="Previous project"
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className={`h-5 w-5 ${lang === "ar" ? "rtl-mirror" : ""}`} />
                 </button>
 
                 <button
@@ -75,7 +76,7 @@ export function Projects() {
                   aria-label="Next project"
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className={`h-5 w-5 ${lang === "ar" ? "rtl-mirror" : ""}`} />
                 </button>
               </div>
             )}

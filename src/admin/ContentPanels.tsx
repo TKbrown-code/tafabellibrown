@@ -148,6 +148,7 @@ function ThumbnailUpload({ value, kind, onChange }: { value?: string | null; kin
 }
 
 export function ProjectsPanel() {
+  const { showModal } = useModal();
   const { data, isLoading } = useAdminList<Project>("projects");
   const ed = useEditor<Project>("projects", blankProject);
   const [activeSuggestionField, setActiveSuggestionField] = useState<ContentSuggestionField | null>(null);
@@ -172,7 +173,7 @@ export function ProjectsPanel() {
       )} />
       <Drawer open={!!d} title={d && !isNew(d.id) ? `Edit · ${d.title}` : "New project"} onClose={() => { setActiveSuggestionField(null); ed.setDraft(null); }}
         footer={d && <>
-          {!isNew(d.id) && <ConfirmDelete onConfirm={() => ed.del.mutate(d.id, { onSuccess: () => ed.setDraft(null) })} testId="button-delete-project" />}
+          {!isNew(d.id) && <ConfirmDelete pending={ed.del.isPending} onConfirm={() => ed.del.mutate(d.id, { onSuccess: () => { ed.setDraft(null); showModal({ type: "success", title: "Project deleted", description: "The project was removed from your portfolio." }); }, onError: (error) => showModal({ type: "error", title: "Could not delete project", description: (error as Error).message || "Please try again." }) })} testId="button-delete-project" />}
           {ed.save.isError && <span role="alert" className="max-w-sm text-xs text-danger">{saveErrorMessage(ed.save.error)}</span>}
           <button className="btn-ghost btn-sm" onClick={() => ed.setDraft(null)}>Cancel</button>
           <button className="btn-primary btn-sm" disabled={ed.save.isPending || !d.title || !translationReady(d, "projects")} onClick={() => ed.save.mutate(stripNew({ ...d, slug: d.slug || slugify(d.title) }), { onSuccess: () => ed.setDraft(null) })} data-testid="button-save-project">{ed.save.isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</> : <><Save className="h-3.5 w-3.5" /> Save reviewed content</>}</button>
@@ -231,6 +232,7 @@ export function ProjectsPanel() {
 const blankPost = (): Post => ({ id: `new-${Date.now()}`, slug: "", title: "", title_zh: "", excerpt: "", excerpt_zh: "", content: "", content_zh: "", tags: [], cover_url: null, reading_minutes: 4, published: false, published_at: new Date().toISOString() });
 
 export function PostsPanel() {
+  const { showModal } = useModal();
   const { data, isLoading } = useAdminList<Post>("posts");
   const ed = useEditor<Post>("posts", blankPost);
   const [activeSuggestionField, setActiveSuggestionField] = useState<ContentSuggestionField | null>(null);
@@ -249,7 +251,7 @@ export function PostsPanel() {
       )} />
       <Drawer open={!!d} title={d && !isNew(d.id) ? `Edit · ${d.title}` : "New post"} onClose={() => { setActiveSuggestionField(null); ed.setDraft(null); }}
         footer={d && <>
-          {!isNew(d.id) && <ConfirmDelete onConfirm={() => ed.del.mutate(d.id, { onSuccess: () => ed.setDraft(null) })} testId="button-delete-post" />}
+          {!isNew(d.id) && <ConfirmDelete pending={ed.del.isPending} onConfirm={() => ed.del.mutate(d.id, { onSuccess: () => { ed.setDraft(null); showModal({ type: "success", title: "Blog post deleted", description: "The post was removed from your published content." }); }, onError: (error) => showModal({ type: "error", title: "Could not delete blog post", description: (error as Error).message || "Please try again." }) })} testId="button-delete-post" />}
           {ed.save.isError && <span role="alert" className="max-w-sm text-xs text-danger">{saveErrorMessage(ed.save.error)}</span>}
           <button className="btn-ghost btn-sm" onClick={() => ed.setDraft(null)}>Cancel</button>
           <button className="btn-primary btn-sm" disabled={ed.save.isPending || !d.title || !translationReady(d, "posts")} onClick={() => ed.save.mutate(stripNew({ ...d, slug: d.slug || slugify(d.title), reading_minutes: Math.max(1, Math.round(d.content.split(/\s+/).length / 220)) }), { onSuccess: () => ed.setDraft(null) })} data-testid="button-save-post">{ed.save.isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</> : <><Save className="h-3.5 w-3.5" /> Save reviewed content</>}</button>
@@ -279,6 +281,7 @@ export function PostsPanel() {
 const CATS: SkillCategory[] = ["frontend", "backend", "data", "devops", "testing"];
 
 export function SkillsPanel() {
+  const { showModal } = useModal();
   const { data, isLoading } = useAdminList<Skill>("skills");
   const save = useAdminSave<Skill>("skills");
   const del = useAdminDelete("skills");
@@ -314,7 +317,7 @@ export function SkillsPanel() {
                   <button type="button" onClick={() => save.mutate({ ...s, is_primary: !s.is_primary })} className={`grid h-6 w-6 place-items-center rounded-sm hover:bg-border ${s.is_primary ? "text-accent" : "text-faint hover:text-accent"}`} aria-label={`${s.is_primary ? "Remove" : "Mark"} ${s.name} ${s.is_primary ? "from" : "as"} primary`} title={s.is_primary ? "Remove from primary stack" : "Add to primary stack"}><Star className={`h-3 w-3 ${s.is_primary ? "fill-current" : ""}`} /></button>
                   <button type="button" disabled={index === 0 || save.isPending} onClick={() => void reorder(c, s.id, -1)} className="grid h-6 w-6 place-items-center rounded-sm text-faint hover:bg-border hover:text-ink disabled:opacity-30" aria-label={`Move ${s.name} up`}><ArrowUp className="h-3 w-3" /></button>
                   <button type="button" disabled={index === items.length - 1 || save.isPending} onClick={() => void reorder(c, s.id, 1)} className="grid h-6 w-6 place-items-center rounded-sm text-faint hover:bg-border hover:text-ink disabled:opacity-30" aria-label={`Move ${s.name} down`}><ArrowDown className="h-3 w-3" /></button>
-                  <button type="button" onClick={() => del.mutate(s.id)} className="grid h-6 w-6 place-items-center rounded-sm text-faint hover:bg-border hover:text-danger" aria-label={`Remove ${s.name}`}><X className="h-3 w-3" /></button>
+                  <button type="button" disabled={del.isPending} onClick={() => del.mutate(s.id, { onSuccess: () => showModal({ type: "success", title: "Skill removed", description: `${s.name} was removed from your skills.` }), onError: (error) => showModal({ type: "error", title: "Could not remove skill", description: (error as Error).message || "Please try again." }) })} className="grid h-6 w-6 place-items-center rounded-sm text-faint hover:bg-border hover:text-danger disabled:opacity-50" aria-label={`Remove ${s.name}`}>{del.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}</button>
                 </span>
               ))}
             </div>
@@ -371,7 +374,7 @@ export function ServicesPanel() {
   };
   const removeService = async () => {
     if (!d) return;
-    ed.del.mutate(d.id, { onSuccess: () => ed.setDraft(null) });
+    ed.del.mutate(d.id, { onSuccess: () => { ed.setDraft(null); showModal({ type: "success", title: "Service deleted", description: "The service was removed from your portfolio." }); }, onError: (error) => showModal({ type: "error", title: "Could not delete service", description: (error as Error).message || "Please try again." }) });
   };
   const closeEditor = () => {
     if (d?.screenshot_path && d.screenshot_path !== originalScreenshot) void deleteServiceScreenshot(d.screenshot_path).catch(() => undefined);
@@ -387,7 +390,7 @@ export function ServicesPanel() {
         </button>
       )} />
       <Drawer open={!!d} title={d && !isNew(d.id) ? `Edit · ${d.title}` : "New service"} onClose={() => { if (!uploading) { setActiveSuggestionField(null); closeEditor(); } }} footer={d && <>
-        {!isNew(d.id) && !uploading && <ConfirmDelete onConfirm={removeService} testId="button-delete-service" />}
+        {!isNew(d.id) && !uploading && <ConfirmDelete pending={ed.del.isPending} onConfirm={removeService} testId="button-delete-service" />}
         {(ed.save.isError || uploadError) && <span className="max-w-sm text-xs text-danger">{uploadError || (ed.save.error as Error).message}</span>}
         <button className="btn-ghost btn-sm" disabled={uploading} onClick={closeEditor}>Cancel</button>
         <button className="btn-primary btn-sm" disabled={ed.save.isPending || uploading || !d.title.trim() || !d.category.trim() || !d.subcategory.trim() || !translationReady(d, "services")} onClick={() => ed.save.mutate(stripNew(d), { onSuccess: async () => { if (originalScreenshot && originalScreenshot !== d.screenshot_path) await deleteServiceScreenshot(originalScreenshot).catch(() => undefined); setOriginalScreenshot(d.screenshot_path); ed.setDraft(null); } })} data-testid="button-save-service">{ed.save.isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</> : <><Save className="h-3.5 w-3.5" /> Save reviewed content</>}</button>

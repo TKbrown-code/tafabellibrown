@@ -6,7 +6,7 @@ import { pickSetting, useSiteSettings } from "@/lib/site-settings";
 import { Reveal } from "@/components/shared/ui";
 import { Socials } from "@/components/shared/Layout";
 import { useModal } from "@/hooks/useModal";
-import { TurnstileWidget, turnstileSiteKey } from "@/components/shared/TurnstileWidget";
+import { TurnstileWidget, turnstileErrorMessage, turnstileSiteKey } from "@/components/shared/TurnstileWidget";
 
 export function Contact() {
   const { t, lang } = useI18n();
@@ -181,7 +181,7 @@ export function Contact() {
                 {suggestionError && <p className="px-1 py-2 text-xs text-muted" role="status">{suggestionError}</p>}
                 {suggestions.length > 0 && <div className="space-y-1.5">
                   {suggestions.map((suggestion, index) => (
-                    <button key={`${index}-${suggestion}`} type="button" className="flex w-full items-start gap-2.5 rounded-xl border border-transparent bg-surface/80 px-3 py-2.5 text-left text-xs leading-relaxed text-muted transition-colors hover:border-accent/30 hover:bg-surface-2 hover:text-ink" onClick={() => { setForm((current) => ({ ...current, body: suggestion })); setErrors((current) => ({ ...current, body: "" })); setSuggestionOpen(false); document.getElementById("c-body")?.focus(); }} data-testid="button-apply-message-suggestion">
+                    <button key={`${index}-${suggestion}`} type="button" className="flex w-full items-start gap-2.5 rounded-xl border border-transparent bg-surface/80 px-3 py-2.5 text-start text-xs leading-relaxed text-muted transition-colors hover:border-accent/30 hover:bg-surface-2 hover:text-ink" onClick={() => { setForm((current) => ({ ...current, body: suggestion })); setErrors((current) => ({ ...current, body: "" })); setSuggestionOpen(false); document.getElementById("c-body")?.focus(); }} data-testid="button-apply-message-suggestion">
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent/10 text-[10px] font-semibold text-accent">{index + 1}</span>
                       <span className="line-clamp-2">{suggestion}</span>
                     </button>
@@ -198,9 +198,9 @@ export function Contact() {
               <p className="mb-2 flex items-center gap-2 text-xs font-medium text-muted"><ShieldCheck className="h-3.5 w-3.5 text-accent" />Complete this quick check to send your message</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-h-[66px] min-w-0 max-w-full">
-                  {turnstileSiteKey ? <TurnstileWidget key={turnstileVersion} onVerify={(token) => { setTurnstileToken(token); setTurnstileError(""); }} onExpire={() => { setTurnstileToken(""); setTurnstileError("The robot check expired. Please complete it again."); }} onError={() => { setTurnstileToken(""); setTurnstileError("Robot verification could not load. Refresh and try again."); }} /> : <p className="py-2 text-xs text-danger">Robot verification is not configured for this site.</p>}
+                  {turnstileSiteKey ? <TurnstileWidget key={turnstileVersion} onVerify={(token) => { setTurnstileToken(token); setTurnstileError(""); }} onExpire={() => { setTurnstileToken(""); setTurnstileError("The robot check expired. Please complete it again."); }} onError={(errorCode) => { setTurnstileToken(""); setTurnstileError(turnstileErrorMessage(errorCode)); }} /> : <p className="py-2 text-xs text-danger">Robot verification is not configured for this site.</p>}
                 </div>
-                <button type="submit" className="btn-primary shrink-0 sm:ml-auto" disabled={send.isPending || !turnstileSiteKey || !turnstileToken} data-testid="button-send">
+                <button type="submit" className="btn-primary shrink-0 sm:ms-auto" disabled={send.isPending || !turnstileSiteKey || !turnstileToken} data-testid="button-send">
                   <Send className="h-4 w-4" /> {send.isPending ? t("f_sending") : t("f_send")}
                 </button>
               </div>

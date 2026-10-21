@@ -7,7 +7,7 @@ type TurnstileWidgetApi = {
     size: "flexible";
     callback: (token: string) => void;
     "expired-callback": () => void;
-    "error-callback": () => void;
+    "error-callback": (errorCode: string | number) => void;
   }) => string;
   remove: (widgetId: string) => void;
 };
@@ -15,7 +15,14 @@ type TurnstileWindow = Window & { turnstile?: TurnstileWidgetApi };
 
 export const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? "1x00000000000000000000AA" : "");
 
-export function TurnstileWidget({ onVerify, onExpire, onError }: { onVerify: (token: string) => void; onExpire: () => void; onError: () => void }) {
+export function turnstileErrorMessage(errorCode?: string | number) {
+  if (String(errorCode) === "110200") {
+    return `This domain (${window.location.hostname}) is not authorized for this Turnstile widget. Add it in Cloudflare Turnstile Hostname Management.`;
+  }
+  return "Robot verification could not load. Refresh and try again.";
+}
+
+export function TurnstileWidget({ onVerify, onExpire, onError }: { onVerify: (token: string) => void; onExpire: () => void; onError: (errorCode?: string | number) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const callbackRef = useRef({ onVerify, onExpire, onError });
@@ -32,7 +39,7 @@ export function TurnstileWidget({ onVerify, onExpire, onError }: { onVerify: (to
         size: "flexible",
         callback: (token) => callbackRef.current.onVerify(token),
         "expired-callback": () => callbackRef.current.onExpire(),
-        "error-callback": () => callbackRef.current.onError(),
+        "error-callback": (errorCode) => callbackRef.current.onError(errorCode),
       });
     };
     const existingScript = document.querySelector<HTMLScriptElement>('script[data-turnstile="true"]');
@@ -47,7 +54,7 @@ export function TurnstileWidget({ onVerify, onExpire, onError }: { onVerify: (to
         document.head.appendChild(script);
       }
       script.addEventListener("load", render);
-      script.addEventListener("error", callbackRef.current.onError, { once: true });
+      script.addEventListener("error", () => callbackRef.current.onError(), { once: true });
     }
     return () => {
       active = false;

@@ -151,6 +151,7 @@ export type BlogSchedule = { enabled: boolean; timezone: string; postTimes: stri
 export type BlogScheduleRun = { id: string; scheduled_for: string; status: "running" | "published" | "skipped" | "failed"; started_at: string; finished_at: string | null; post_slug: string | null; source_url: string | null; article_title: string | null; error_summary: string | null };
 export async function fetchBlogSchedule() { return (await Beari.get("/admin/blog-schedule")).data.data as { schedule: BlogSchedule; runs: BlogScheduleRun[] }; }
 export async function saveBlogSchedule(schedule: Pick<BlogSchedule, "enabled" | "timezone" | "postTimes">) { return (await Beari.put("/admin/blog-schedule", schedule)).data.data as BlogSchedule; }
+export async function triggerBlogPublish() { return (await Beari.post("/admin/blog-schedule/run")).data as { success: boolean; message: string }; }
 export type AdminNotificationCursor = { updatedAt: string; id: string };
 export async function fetchAdminNotifications(cursor?: AdminNotificationCursor) {
   return (await Beari.get("/admin/notifications", {
@@ -171,17 +172,55 @@ export type AdminApiLog = {
 export type AdminApiServiceMetric = {
   service: string;
   requests: number;
+  events: number;
   errors: number;
+  warnings: number;
   averageDurationMs: number;
+  p95DurationMs: number;
+};
+export type AdminApiHealth = {
+  api: { ok: boolean; uptimeSeconds: number; nodeVersion: string };
+  database: { ok: boolean; durationMs: number };
+  redis: { ok: boolean; durationMs: number | null };
+  memory: { rssBytes: number; heapUsedBytes: number; heapTotalBytes: number; externalBytes: number };
+};
+export type AdminStorageMetrics = {
+  objects: number;
+  bytes: number;
+  buckets: { bucket: string; objects: number; bytes: number; lastObjectAt: string | null }[];
+};
+export type AdminCloudflareStorageMetrics = {
+  configured: boolean;
+  bucket: string | null;
+  objects: number | null;
+  bytes: number | null;
+  lastObjectAt: string | null;
+};
+export type AdminAccessMetrics = {
+  pageViews: number;
+  uniqueVisitors: number;
+  topPaths: { path: string; views: number }[];
+  devices: Record<string, number>;
 };
 export type AdminApiMetrics = {
   requests: number;
   errors: number;
   warnings: number;
+  clientErrors: number;
+  serverErrors: number;
   averageDurationMs: number;
+  p95DurationMs: number;
+  timeline: { hour: string; requests: number; errors: number; warnings: number; averageDurationMs: number; pageViews: number }[];
   services: AdminApiServiceMetric[];
+  endpoints: { method: string; path: string; requests: number; failures: number; averageDurationMs: number }[];
+  statusGroups: Record<string, number>;
+  health: AdminApiHealth;
+  storage: AdminStorageMetrics | null;
+  cloudflareStorage: AdminCloudflareStorageMetrics | null;
+  access: AdminAccessMetrics;
+  beari: { responses: number; failures: number; averageDurationMs: number };
 };
-export async function fetchAdminApiLogs(offset = 0): Promise<AdminApiLog[]> { return (await Beari.get("/admin/logs", { params: { offset } })).data.data; }
+export async function fetchAdminApiLogs(): Promise<AdminApiLog[]> { return (await Beari.get("/admin/logs")).data.data; }
 export async function fetchAdminApiMetrics(): Promise<AdminApiMetrics> { return (await Beari.get("/admin/logs/metrics")).data.data; }
 export async function markAdminNotificationRead(id: string) { await Beari.patch(`/admin/notifications/${encodeURIComponent(id)}/read`); }
 export async function markAllAdminNotificationsRead() { await Beari.patch("/admin/notifications/read-all"); }

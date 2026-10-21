@@ -16,7 +16,7 @@ export function BlogPreview() {
             <h2 className="h-section">{t("blog_title")}</h2>
           </Reveal>
           <Link to="/blog" className="btn-ghost" data-testid="link-all-posts">
-            {t("all_posts")} <ArrowRight className="h-4 w-4" />
+            {t("all_posts")} <ArrowRight className="h-4 w-4 rtl-mirror" />
           </Link>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2">
