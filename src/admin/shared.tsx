@@ -4,8 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Loader2, Trash2, X } from "lucide-react";
 import { completeAdminInvite, getAdminSession, loginAdmin, logoutAdmin, requestAdminMagicLink, useAdminDelete, useAdminSave } from "@/lib/api";
 import { Logo } from "@/components/shared/ui";
+import { turnstileErrorMessage } from "@/components/shared/TurnstileWidget";
 
-type TurnstileApi = { render: (container: HTMLElement, options: { sitekey: string; theme: "auto"; callback: (token: string) => void; "expired-callback": () => void; "error-callback": () => void }) => string; remove: (widgetId: string) => void; reset: (widgetId: string) => void };
+type TurnstileApi = { render: (container: HTMLElement, options: { sitekey: string; theme: "auto"; callback: (token: string) => void; "expired-callback": () => void; "error-callback": (errorCode: string | number) => void }) => string; remove: (widgetId: string) => void; reset: (widgetId: string) => void };
 declare global { interface Window { turnstile?: TurnstileApi } }
 
 export type Tab = "overview" | "calendar" | "messages" | "api-logs" | "projects" | "posts" | "blog-schedule" | "skills" | "services" | "settings" | "resume" | "beari-chat" | "beari-settings" | "admins" | "profile";
@@ -62,7 +63,7 @@ export function Login({ onSignIn, onRequestSignInLink }: { onSignIn: (e: string,
         theme: "auto",
         callback: (token) => { setCaptchaToken(token); setErr(""); setCaptchaReady(true); },
         "expired-callback": () => { setCaptchaToken(""); setCaptchaReady(false); },
-        "error-callback": () => { setCaptchaToken(""); setCaptchaReady(false); setErr("Robot check could not load. Refresh and try again."); },
+        "error-callback": (errorCode) => { setCaptchaToken(""); setCaptchaReady(false); setErr(turnstileErrorMessage(errorCode)); },
       });
     };
     if (window.turnstile) render();
@@ -203,12 +204,12 @@ export function Drawer({ open, title, onClose, children, footer }: { open: boole
   );
 }
 
-export function ConfirmDelete({ onConfirm, testId }: { onConfirm: () => void; testId: string }) {
+export function ConfirmDelete({ onConfirm, testId, pending = false }: { onConfirm: () => void; testId: string; pending?: boolean }) {
   const [armed, setArmed] = useState(false);
   useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t); }, [armed]);
   return (
-    <button type="button" className={`btn-sm btn mr-auto ${armed ? "bg-danger text-white" : "btn-ghost text-danger"}`} onClick={() => (armed ? onConfirm() : setArmed(true))} data-testid={testId}>
-      <Trash2 className="h-3.5 w-3.5" /> {armed ? "Click again to delete" : "Delete"}
+    <button type="button" disabled={pending} className={`btn-sm btn mr-auto ${armed ? "bg-danger text-white" : "btn-ghost text-danger"}`} onClick={() => (armed ? onConfirm() : setArmed(true))} data-testid={testId}>
+      {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} {pending ? "Deleting…" : armed ? "Click again to delete" : "Delete"}
     </button>
   );
 }
@@ -227,7 +228,7 @@ export const stripNew = <T extends { id: string }>(d: T) => (isNew(d.id) ? { ...
 
 export function Panel({ title, desc, action, children }: { title: string; desc: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section>
+    <section className="min-w-0">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="font-sans text-xl font-bold">{title}</h1><p className="text-sm text-muted">{desc}</p></div>
         {action}

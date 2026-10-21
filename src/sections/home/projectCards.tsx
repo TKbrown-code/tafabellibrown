@@ -10,16 +10,16 @@ export function ProjectCard({ p, index }: { p: Project; index: number }) {
   const { t, loc } = useI18n();
   const flip = index % 2 === 1;
   return (
-    <article className="card group grid overflow-hidden md:grid-cols-2" data-testid={`card-project-${p.slug}`}>
+    <article className="card group grid min-w-0 overflow-hidden md:grid-cols-2" data-testid={`card-project-${p.slug}`}>
       <Link to={`/projects/${p.slug}`} className={`relative block aspect-video overflow-hidden bg-gradient-to-br from-surface-2 to-bg md:aspect-auto md:min-h-[340px] ${flip ? "md:order-2" : ""}`} aria-label={loc(p.title, p.title_zh, p.title_fr, p.title_es, p.title_ar, p.title_pcm)}>
         {p.cover_url && (
           <img src={assetUrl(p.cover_url)} alt={`${p.title} screenshot`} width={1440} height={900} loading="lazy" className="absolute inset-0 h-full w-full object-contain object-center p-3 transition-transform duration-500 group-hover:scale-[1.01] md:p-4" />
         )}
       </Link>
-      <div className="flex flex-col p-7 md:p-9">
-        <p className="font-mono text-xs text-faint">0{index + 1} · {loc(p.tagline, p.tagline_zh, p.tagline_fr, p.tagline_es, p.tagline_ar, p.tagline_pcm)}</p>
+      <div className="flex min-w-0 flex-col p-5 sm:p-7 md:p-9">
+        <p dir="auto" className="font-mono text-xs text-faint">0{index + 1} · {loc(p.tagline, p.tagline_zh, p.tagline_fr, p.tagline_es, p.tagline_ar, p.tagline_pcm)}</p>
         <h3 className="mt-2 text-2xl font-bold md:text-3xl">{loc(p.title, p.title_zh, p.title_fr, p.title_es, p.title_ar, p.title_pcm)}</h3>
-        <p className="mt-1 font-mono text-xs text-muted">{t("cs_role")}: {loc(p.role, p.role_zh, p.role_fr, p.role_es, p.role_ar, p.role_pcm)} · {p.year}</p>
+        <p dir="auto" className="mt-1 font-mono text-xs text-muted">{t("cs_role")}: {loc(p.role, p.role_zh, p.role_fr, p.role_es, p.role_ar, p.role_pcm)} · {p.year}</p>
         <p className="mt-3 text-muted">{loc(p.summary, p.summary_zh, p.summary_fr, p.summary_es, p.summary_ar, p.summary_pcm)}</p>
         <dl className="mt-6 grid grid-cols-3 gap-3">
           {p.metrics.slice(0, 3).map((m) => (
@@ -35,7 +35,7 @@ export function ProjectCard({ p, index }: { p: Project; index: number }) {
         </div>
         <div className="mt-auto flex flex-wrap gap-3 pt-7">
           <Link to={`/projects/${p.slug}`} className="btn-ghost" data-testid={`link-case-${p.slug}`}>
-            {t("read_case")} <ArrowRight className="h-4 w-4" />
+            {t("read_case")} <ArrowRight className="h-4 w-4 rtl-mirror" />
           </Link>
           {p.live_url && (
             <ExternalLink href={p.live_url} className="btn-primary" data-testid={`link-live-${p.slug}`}>

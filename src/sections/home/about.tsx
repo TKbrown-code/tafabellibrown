@@ -33,7 +33,7 @@ function About() {
               <div className="flex flex-wrap gap-2">
                 {site.languages.map((l) => (
                   <span key={l.en} className="chip">
-                    <span className="mr-1 text-ink">{pick(l)}</span> · {pick(l.level)}
+                    <span className="me-1 text-ink">{pick(l)}</span> · {pick(l.level)}
                   </span>
                 ))}
               </div>

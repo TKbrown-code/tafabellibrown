@@ -45,7 +45,7 @@ function Hero() {
           <Reveal delay={0.2}>
             <div className="mt-7 flex flex-col gap-3 min-[480px]:flex-row sm:mt-8">
               <button className="btn-primary" onClick={() => scrollTo("projects")} data-testid="button-view-projects">
-                {t("cta_projects")} <ArrowRight className="h-4 w-4" />
+                {t("cta_projects")} <ArrowRight className="h-4 w-4 rtl-mirror" />
               </button>
               <a className="btn-ghost" download="Tafa_Belli_Brown_Resume.pdf" href={settings.resumeUrl || site.resumeUrl} target="_blank" rel="noopener noreferrer" data-testid="button-download-resume">
                 <Download className="h-4 w-4" /> {t("cta_resume")}
@@ -82,7 +82,7 @@ function Hero() {
               transition={{ duration: 0.5, ease: "easeOut" }}
             />
           </div>
-          <div className="absolute bottom-3 left-3 flex max-w-[calc(100%_-_1.5rem)] items-center gap-2 rounded-2xl border border-border/80 bg-bg/90 px-2.5 py-2 shadow-soft backdrop-blur-md sm:bottom-5 sm:left-5 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+          <div className="absolute bottom-3 start-3 flex max-w-[calc(100%_-_1.5rem)] items-center gap-2 rounded-2xl border border-border/80 bg-bg/90 px-2.5 py-2 shadow-soft backdrop-blur-md sm:bottom-5 sm:start-5 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><MapPin className="h-4 w-4" /></span>
             <span className="min-w-0"><span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted">{lang === "zh" ? "所在地" : "Based in"}</span><span className="block truncate text-xs font-semibold text-ink sm:text-sm">{location}</span></span>
           </div>

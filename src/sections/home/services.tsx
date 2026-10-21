@@ -52,14 +52,14 @@ export function Services({ fullPage = false, initialCategory }: { fullPage?: boo
               </div>
               <label className="relative block w-full sm:max-w-xs">
                 <span className="sr-only">{lang === "zh" ? "服务类别" : "Service category"}</span>
-                <select value={selectedKey} onChange={(event) => setActiveCategory(event.target.value)} className="input appearance-none pr-10 font-medium" aria-label={lang === "zh" ? "服务类别" : "Service category"} data-testid="select-service-category">
+                <select value={selectedKey} onChange={(event) => setActiveCategory(event.target.value)} className="input appearance-none pe-10 font-medium" aria-label={lang === "zh" ? "服务类别" : "Service category"} data-testid="select-service-category">
                   {categories.map(([key, subcategories]) => {
                     const firstItem = [...subcategories.values()][0]?.[0];
                     const count = [...subcategories.values()].reduce((sum, items) => sum + items.length, 0);
                     return <option key={key} value={key}>{firstItem ? local(firstItem, "category") : key} · {count}</option>;
                   })}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                <ChevronDown className="pointer-events-none absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               </label>
             </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3, Loader2, Plus, Save, Trash2 } from "lucide-react";
-import { fetchBlogSchedule, saveBlogSchedule, type BlogSchedule, type BlogScheduleRun } from "@/lib/api";
+import { Clock3, Loader2, Plus, Play, Save, Trash2 } from "lucide-react";
+import { fetchBlogSchedule, saveBlogSchedule, triggerBlogPublish, type BlogSchedule, type BlogScheduleRun } from "@/lib/api";
 import { Field, Panel } from "./shared";
 
 const defaultSchedule: BlogSchedule = { enabled: false, timezone: "Asia/Shanghai", postTimes: ["09:00", "21:00"], updatedAt: "" };
@@ -35,6 +35,10 @@ export function BlogAutomationPanel() {
       void queryClient.invalidateQueries({ queryKey: ["blog-schedule"] });
       window.setTimeout(() => setSaved(false), 2500);
     },
+  });
+  const trigger = useMutation({
+    mutationFn: triggerBlogPublish,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["blog-schedule"] }),
   });
   const addTime = () => {
     if (!newTime || draft.postTimes.includes(newTime) || draft.postTimes.length >= 12) return;
@@ -81,8 +85,17 @@ export function BlogAutomationPanel() {
           {save.isError && <p role="alert" className="text-sm text-danger">Could not save schedule: {(save.error as Error).message}</p>}
           <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4"><button type="button" className="btn-primary btn-sm" onClick={() => save.mutate()} disabled={save.isPending || !draft.timezone.trim() || draft.postTimes.length === 0 || new Set(draft.postTimes).size !== draft.postTimes.length}><Save className="h-4 w-4" />{save.isPending ? "Saving…" : saved ? "Schedule saved" : "Save schedule"}{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}</button><p className="text-xs text-muted">Changes are picked up by the backend scheduler within 15 seconds.</p></div>
         </section>
+        <section className="card flex flex-wrap items-center justify-between gap-4 p-5">
+          <div><h2 className="font-semibold">Manual publish</h2><p className="mt-1 text-sm text-muted">Publish one post immediately, even if the automatic schedule is paused.</p></div>
+          <button type="button" className="btn-primary btn-sm" onClick={() => { if (window.confirm("Publish a blog post now? This will create a new public post.")) trigger.mutate(); }} disabled={trigger.isPending}>
+            {trigger.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            {trigger.isPending ? "Publishing…" : "Publish now"}
+          </button>
+          {trigger.isError && <p role="alert" className="w-full text-sm text-danger">Could not start a manual publish: {(trigger.error as Error).message}</p>}
+          {trigger.isSuccess && <p role="status" className="w-full text-sm text-success">{trigger.data.message}</p>}
+        </section>
         <section className="card overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4"><div><h2 className="font-semibold">Recent runs</h2><p className="mt-1 text-xs text-muted">Latest scheduled post attempts</p></div><button type="button" className="btn-ghost btn-sm" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}</button></div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4"><div><h2 className="font-semibold">Recent runs</h2><p className="mt-1 text-xs text-muted">Latest scheduled and manual post attempts</p></div><button type="button" className="btn-ghost btn-sm" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}</button></div>
           {query.data.runs.length ? <div className="divide-y divide-border">{query.data.runs.map((run) => <article key={run.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
             <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${runStatus(run)}`}>{run.status}</span><time className="text-xs text-muted">{displayRunTime(run.scheduled_for, draft.timezone)}</time></div>{run.post_slug && <p className="mt-2 truncate text-sm font-medium">{run.article_title || run.post_slug}</p>}{run.source_url && <a className="mt-1 block truncate text-xs text-accent hover:underline" href={run.source_url} target="_blank" rel="noreferrer">{run.source_url}</a>}{run.error_summary && <p className="mt-2 text-xs text-danger">{run.error_summary}</p>}</div>
           </article>)}</div> : <p className="px-5 py-10 text-center text-sm text-muted">No scheduled runs yet. Enable the schedule to start publishing.</p>}

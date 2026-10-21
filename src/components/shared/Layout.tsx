@@ -71,7 +71,7 @@ export function LangToggle() {
         <span>{selected.short}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div id="language-options" role="listbox" aria-label="Choose language" className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-xl">
+      {open && <div id="language-options" role="listbox" aria-label="Choose language" className="absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-xl">
         {labels.map((option) => (
           <button
             key={option.value}
@@ -79,7 +79,7 @@ export function LangToggle() {
             role="option"
             aria-selected={lang === option.value}
             onClick={() => { setLang(option.value); setOpen(false); triggerRef.current?.focus(); }}
-            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${lang === option.value ? "bg-accent/10 font-semibold text-accent" : "text-ink hover:bg-surface-2"}`}
+            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-start text-sm transition-colors ${lang === option.value ? "bg-accent/10 font-semibold text-accent" : "text-ink hover:bg-surface-2"}`}
           >
             <span>{option.name}</span>
             {lang === option.value && <Check className="h-4 w-4" />}
@@ -156,7 +156,7 @@ function Header() {
         <div className="flex items-center gap-2">
           <LangToggle />
           <ThemeToggle />
-          <a href={settings.resumeUrl || site.resumeUrl} download="Tafa_Belli_Brown_Resume.pdf" target="_blank" rel="noopener noreferrer" title={t("cta_resume")} aria-label={t("cta_resume")} className="group hidden h-10 items-center gap-2 rounded-full border border-accent/25 bg-accent/10 pl-1.5 pr-3.5 text-xs font-semibold text-accent shadow-sm transition-all hover:border-accent hover:bg-accent hover:text-accent-ink hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:inline-flex" data-testid="button-resume-header">
+          <a href={settings.resumeUrl || site.resumeUrl} download="Tafa_Belli_Brown_Resume.pdf" target="_blank" rel="noopener noreferrer" title={t("cta_resume")} aria-label={t("cta_resume")} className="group hidden h-10 items-center gap-2 rounded-full border border-accent/25 bg-accent/10 ps-1.5 pe-3.5 text-xs font-semibold text-accent shadow-sm transition-all hover:border-accent hover:bg-accent hover:text-accent-ink hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:inline-flex" data-testid="button-resume-header">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-accent-ink transition-colors group-hover:bg-white/15"><Download className="h-3.5 w-3.5" /></span>
             <span>CV</span>
           </a>
@@ -170,7 +170,7 @@ function Header() {
           <motion.nav initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden lg:hidden" aria-label="Mobile">
             <div className="container flex flex-col gap-1 pb-4">
               {NAV.map((n) => (
-                <a key={n.id} href={n.id === "services" ? "/services" : pathname === "/" ? `#${n.id}` : `/#${n.id}`} onClick={(event) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); go(n.id); }} aria-current={activeSection === n.id ? "location" : undefined} className="rounded-xl px-3 py-2.5 text-left text-sm font-medium hover:bg-surface-2" data-testid={`link-mobile-${n.id}`}>
+                <a key={n.id} href={n.id === "services" ? "/services" : pathname === "/" ? `#${n.id}` : `/#${n.id}`} onClick={(event) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); go(n.id); }} aria-current={activeSection === n.id ? "location" : undefined} className="rounded-xl px-3 py-2.5 text-start text-sm font-medium hover:bg-surface-2" data-testid={`link-mobile-${n.id}`}>
                   {t(n.key)}
                 </a>
               ))}

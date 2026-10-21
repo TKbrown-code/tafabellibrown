@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Download, X } from "lucide-react";
 
 /**
  * Removes leftover "**" markers that cannot be paired on a line, so a model
@@ -17,6 +18,56 @@ export function cleanMarkdown(text: string): string {
 }
 
 const HOME_SECTIONS = new Set(["about", "skills", "projects", "services", "experience", "blog", "contact"]);
+
+function MarkdownImage({ src, alt }: { src?: string; alt?: string }) {
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expanded]);
+  if (!src) return null;
+  let target: URL;
+  try {
+    target = new URL(src, window.location.href);
+  } catch {
+    return null;
+  }
+  if (target.origin !== window.location.origin) return null;
+  let downloadName = target.pathname.split("/").pop() || "image";
+  try {
+    downloadName = decodeURIComponent(downloadName);
+  } catch {
+    downloadName = "image";
+  }
+  return (
+    <>
+      <figure className="my-3 w-fit max-w-full overflow-hidden rounded-xl border border-border bg-surface">
+        <button type="button" onClick={() => setExpanded(true)} className="block cursor-zoom-in p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={`Enlarge ${alt || "image shared by Beari"}`}>
+          <img src={target.href} alt={alt || "Image shared by Beari"} loading="lazy" className="max-h-44 max-w-[240px] rounded-lg object-contain sm:max-w-[280px]" />
+        </button>
+        <figcaption className="flex items-center justify-between gap-3 border-t border-border px-3 py-2">
+          <span className="min-w-0 truncate text-xs text-muted">{alt || "Image"}</span>
+          <a href={target.href} download={downloadName} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent/40 hover:text-accent">
+            <Download className="h-3.5 w-3.5" />
+            Download
+          </a>
+        </figcaption>
+      </figure>
+      {expanded && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-4" role="dialog" aria-modal="true" aria-label={alt || "Expanded image"} onClick={() => setExpanded(false)}>
+          <button type="button" onClick={() => setExpanded(false)} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="Close expanded image">
+            <X className="h-5 w-5" />
+          </button>
+          <img src={target.href} alt={alt || "Image shared by Beari"} className="max-h-[90vh] max-w-[92vw] rounded-xl object-contain" onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
+    </>
+  );
+}
 
 /** Route portfolio links through React Router so they also work in hash-router builds. */
 function MarkdownLink({ href, children }: { href?: string; children?: ReactNode }) {
@@ -61,13 +112,13 @@ const STYLE =
   "[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted";
 
 /** Renders an assistant reply as formatted text (bold, lists, links), never raw markdown. */
-export function BeariMarkdown({ children, className = "" }: { children: string; className?: string }) {
+export function BeariMarkdown({ children, className = "", allowImages = false }: { children: string; className?: string; allowImages?: boolean }) {
   return (
     <div className={`${STYLE} ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        components={components}
-        disallowedElements={["img", "h1", "h2", "h3", "h4", "h5", "h6"]}
+        components={allowImages ? { ...components, img: MarkdownImage } : components}
+        disallowedElements={allowImages ? ["h1", "h2", "h3", "h4", "h5", "h6"] : ["img", "h1", "h2", "h3", "h4", "h5", "h6"]}
         unwrapDisallowed
       >
         {cleanMarkdown(children)}

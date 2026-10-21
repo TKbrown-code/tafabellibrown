@@ -65,12 +65,28 @@
 }
 
 /* Keep fenced article code readable while inline code uses the current theme surface. */
+.article-prose {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .article-prose pre {
+  overflow-x: auto;
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
   overflow-x: auto;
   border: 1px solid hsl(var(--border));
   border-radius: 0.75rem;
   background: #11151f !important;
   color: #e5e7eb;
+}
+
+.article-prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
 }
 
 .article-prose pre code {
@@ -174,6 +190,11 @@
     color-scheme: dark;
   }
   html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+  html[lang="ar"] body { font-family: "Segoe UI", Tahoma, Arial, system-ui, sans-serif; }
+  html[lang="ar"] h1,
+  html[lang="ar"] h2,
+  html[lang="ar"] h3 { letter-spacing: normal; }
+  html[dir="rtl"] .rtl-mirror { transform: scaleX(-1); }
   body { @apply bg-bg text-ink font-sans; font-size: 1rem; line-height: 1.65; }
   ::selection { background: hsl(var(--accent) / 0.18); }
   :focus-visible { outline: 2px solid hsl(var(--accent)); outline-offset: 3px; border-radius: 6px; }
