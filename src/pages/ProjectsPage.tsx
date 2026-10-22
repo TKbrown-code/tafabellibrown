@@ -3,19 +3,19 @@ import { Link } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 import { useProjects } from "@/lib/api";
 import { Reveal, Skeleton } from "@/components/shared/ui";
-import { useTitle } from "@/components/shared/Layout";
+import { SEO } from "@/lib/seo";
 import { ProjectCard } from "@/sections/home/projectCards";
 
 export function ProjectsPage() {
   const { t, lang } = useI18n();
   const { data, isLoading } = useProjects();
   const backLabel = ({ en: "Back to home", zh: "返回首页", fr: "Retour à l’accueil", es: "Volver al inicio", ar: "العودة إلى الصفحة الرئيسية", pcm: "Back to home" } as const)[lang];
-  useTitle(
-    t("projects_title"),
-    "Explore Tafa Belli Brown's selected full-stack projects, technical case studies, and the engineering decisions behind each product.",
-  );
+  const title = t("projects_title");
+  const description = "Explore Tafa Belli Brown's selected full-stack projects, technical case studies, and the engineering decisions behind each product.";
 
   return (
+    <>
+    <SEO title={`${title} | Tafa Belli Brown`} description={description} path="/projects" />
     <main>
       <section className="relative overflow-hidden border-b border-border bg-surface/50">
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
@@ -38,5 +38,6 @@ export function ProjectsPage() {
         {isLoading ? <div className="space-y-8">{[1, 2].map((item) => <Skeleton key={item} className="h-80" />)}</div> : data?.length ? <div className="space-y-8 md:space-y-10">{data.map((project, index) => <Reveal key={project.id}><ProjectCard p={project} index={index} /></Reveal>)}</div> : <p className="py-16 text-center text-muted">No projects available yet.</p>}
       </section>
     </main>
+    </>
   );
 }

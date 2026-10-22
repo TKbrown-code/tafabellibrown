@@ -5,7 +5,8 @@ import { ArrowRight, ArrowUpRight, Code2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useProjects } from "@/lib/api";
 import { ExternalLink, GithubIcon, Reveal, Skeleton, assetUrl } from "@/components/shared/ui";
-import {useTitle, Back, prose} from "../components/shared/Layout"
+import {Back, prose} from "../components/shared/Layout"
+import { BreadcrumbJsonLd, CANONICAL_ORIGIN, SEO } from "@/lib/seo";
 import { NotFound } from "./404";
 
 const syntaxPattern = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\/\*.*?\*\/|\/\/.*$|#.*$|--.*$)|(\b(?:as|async|await|break|case|catch|class|const|continue|def|default|delete|do|else|export|extends|false|finally|for|from|function|if|implements|import|in|interface|let|new|null|of|pass|print|private|protected|public|raise|return|static|switch|this|throw|true|try|type|undefined|var|while|with|yield|SELECT|FROM|WHERE|AND|OR|ORDER|BY|LIMIT|OFFSET|INSERT|INTO|VALUES|UPDATE|SET|DELETE|JOIN|ON|AS|CREATE|TABLE|INDEX|GROUP|HAVING|DISTINCT|NOT|NULL|IS|ASC|DESC)\b)|(\b\d+(?:\.\d+)?\b)|(\b[A-Z][A-Za-z0-9_$]*\b)|(\b[A-Za-z_$][\w$]*(?=\s*\())|([{}()[\].,;:])|(=>|===?|!==?|<=?|>=?|&&|\|\||\?\?|\?\.|\+|-|\*|\/|=|!|<|>|\|)/g;
@@ -69,21 +70,36 @@ export function ProjectPage() {
   const { data, isLoading } = useProjects();
   const idx = data?.findIndex((p) => p.slug === slug) ?? -1;
   const p = data?.[idx];
-  useTitle(
-    p
-      ? `${loc(p.title, p.title_zh, p.title_fr, p.title_es, p.title_ar, p.title_pcm)} case study`
-      : undefined,
-    p
-      ? loc(p.summary, p.summary_zh, p.summary_fr, p.summary_es, p.summary_ar, p.summary_pcm)
-      : undefined,
-    { image: p?.cover_url },
-  );
-
   if (isLoading) return <div className="container py-20"><Skeleton className="h-[60vh]" /></div>;
   if (!p) return <NotFound />;
+  const title = loc(p.title, p.title_zh, p.title_fr, p.title_es, p.title_ar, p.title_pcm);
+  const description = loc(p.summary, p.summary_zh, p.summary_fr, p.summary_es, p.summary_ar, p.summary_pcm);
+  const canonicalPath = `/projects/${p.slug}`;
+  const projectSchema = {
+    "@context": "https://schema.org",
+    "@type": ["CreativeWork", "SoftwareApplication"],
+    name: title,
+    description,
+    url: p.live_url || new URL(canonicalPath, CANONICAL_ORIGIN).toString(),
+    image: p.cover_url ? assetUrl(p.cover_url) : undefined,
+    applicationCategory: "WebApplication",
+    operatingSystem: "Web",
+    author: { "@type": "Person", name: "Tafa Belli Brown" },
+    keywords: p.tech.join(", "),
+  };
+  const breadcrumbs = BreadcrumbJsonLd({ items: [
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: title, path: canonicalPath },
+  ] });
   const next = data![(idx + 1) % data!.length];
 
   return (
+    <>
+    <SEO title={`${title} case study | Tafa Belli Brown`} description={description} path={canonicalPath} image={p.cover_url ? assetUrl(p.cover_url) : undefined} structuredData={[
+      projectSchema,
+      breadcrumbs,
+    ]} />
     <article>
       <header className="container min-w-0 pb-10 pt-8 sm:pb-12 sm:pt-10 md:pt-14">
         <Back to="/projects" label={t("projects_kicker")} />
@@ -111,7 +127,7 @@ export function ProjectPage() {
               <span className="h-2.5 w-2.5 rounded-full bg-faint/50" /><span className="h-2.5 w-2.5 rounded-full bg-faint/50" /><span className="h-2.5 w-2.5 rounded-full bg-faint/50" />
               <span className="ml-3 font-mono text-xs text-faint">{p.live_url?.replace(/^https?:\/\//, "")}</span>
             </div>
-            <img src={assetUrl(p.cover_url)} alt={`${p.title} homepage`} width={1440} height={900} className="w-full" />
+            <img src={assetUrl(p.cover_url)} alt={`${p.title} homepage`} width={1440} height={900} loading="lazy" className="w-full" />
           </div>
         </Reveal>
       )}
@@ -162,5 +178,6 @@ export function ProjectPage() {
         </Link>
       )}
     </article>
+    </>
   );
 }

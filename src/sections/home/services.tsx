@@ -76,7 +76,7 @@ export function Services({ fullPage = false, initialCategory }: { fullPage?: boo
                   const imageUrl = service.screenshot_url ?? "";
                   return (
                     <article key={service.id} className="card group overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lift">
-                      {imageUrl ? <img src={imageUrl} alt={local(service, "screenshot_alt") || local(service, "title")} loading="lazy" className="aspect-[16/9] w-full border-b border-border bg-surface-2 object-cover transition-transform duration-300 group-hover:scale-[1.015]" /> : <div className="grid aspect-[16/9] place-items-center border-b border-border bg-gradient-to-br from-surface-2 to-surface text-faint"><ImageIcon className="h-8 w-8" aria-hidden="true" /></div>}
+                      {imageUrl ? <img src={imageUrl} alt={local(service, "screenshot_alt") || local(service, "title")} width={1200} height={675} loading="lazy" className="aspect-[16/9] w-full border-b border-border bg-surface-2 object-cover transition-transform duration-300 group-hover:scale-[1.015]" /> : <div className="grid aspect-[16/9] place-items-center border-b border-border bg-gradient-to-br from-surface-2 to-surface text-faint"><ImageIcon className="h-8 w-8" aria-hidden="true" /></div>}
                       <div className="p-5 sm:p-6">
                         <span className="inline-flex rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">{local(service, "subcategory") || subcategory}</span>
                         <h4 className="mt-3 font-sans text-lg font-semibold tracking-tight">{local(service, "title")}</h4>

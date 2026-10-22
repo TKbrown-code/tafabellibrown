@@ -1,12 +1,28 @@
 {
-"rewrites": [
-{
-"source": "/api/:path*",
-"destination": "https://tafabellibrown.onrender.com/api/:path*"
-},
-{
-"source": "/(.*)",
-"destination": "/index.html"
-}
-]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://tafabellibrown.onrender.com/api/:path*"
+    },
+    {
+      "source": "/projects",
+      "destination": "/projects/index.html"
+    },
+    {
+      "source": "/projects/:slug",
+      "destination": "/projects/:slug/index.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/blog/:slug/index.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/services/index.html"
+    }
+  ]
 }

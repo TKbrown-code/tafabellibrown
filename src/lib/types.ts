@@ -23,6 +23,8 @@ export type Project = {
   featured: boolean;
   published: boolean;
   sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 } & LocalizedColumns<"title" | "tagline" | "summary" | "role" | "problem" | "approach" | "results">;
 
 export type Post = {
@@ -36,6 +38,8 @@ export type Post = {
   reading_minutes: number;
   published: boolean;
   published_at: string | null;
+  created_at?: string;
+  updated_at?: string;
 } & LocalizedColumns<"title" | "excerpt" | "content">;
 
 export type SkillCategory = "frontend" | "backend" | "data" | "devops" | "testing";
