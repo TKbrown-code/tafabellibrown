@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return ({
   plugins: [react(), tailwindcss()],
+  ssgOptions: { dirStyle: "nested" },
   base: process.env.VITE_ROUTER === "hash" ? "./" : "/",
   // Keep the project's ordinary paths intact in Windows environments where native realpath is restricted.
   resolve: { preserveSymlinks: true, alias: { "@": path.resolve(__dirname, "src") } },

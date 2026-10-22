@@ -177,7 +177,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
     const saved = safeStorage.get("lang");
     if (["en", "fr", "zh", "es", "ar", "pcm"].includes(saved ?? "")) return saved as Lang;
-    const browserLang = navigator.language?.toLowerCase() ?? "";
+    const browserLang = typeof navigator === "undefined" ? "" : navigator.language?.toLowerCase() ?? "";
     if (browserLang.startsWith("zh")) return "zh";
     if (browserLang.startsWith("fr")) return "fr";
     if (browserLang.startsWith("es")) return "es";

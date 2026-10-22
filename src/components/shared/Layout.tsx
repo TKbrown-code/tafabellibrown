@@ -5,7 +5,6 @@ import { ArrowLeft, Check, ChevronDown, Download, Globe2, Menu, Moon, Sun, X } f
 import { useI18n, type DictKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { site } from "@/data/site";
-import { ADMIN_ROUTE } from "@/lib/admin-route";
 import { useSiteSettings } from "@/lib/site-settings";
 import { ExternalLink, GithubIcon, LinkedinIcon, Logo, useScrollTo } from "./ui";
 
@@ -258,79 +257,6 @@ export function Layout({ children }: { children: ReactNode }) {
 
 
 export const prose = "prose prose-neutral max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-strong:text-ink prose-li:marker:text-accent prose-code:before:content-none prose-code:after:content-none prose-code:rounded-sm prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-pre:bg-[hsl(224_30%_10%)] prose-pre:border prose-pre:border-border";
-
-const CANONICAL_ORIGIN = "https://tafabellibrown.vercel.app";
-const DEFAULT_SOCIAL_IMAGE =
-  "/api/assets?bucket=site-assets&path=projects%2Fdream-scholarships.jpg";
-
-export function useTitle(
-  title?: string,
-  description?: string,
-  options: {
-    image?: string | null;
-    type?: "website" | "article";
-    noIndex?: boolean;
-  } = {},
-) {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    const pageTitle = title
-      ? `${title} | ${site.name}`
-      : `${site.name} | Full-Stack Web Developer`;
-    const pageDescription =
-      description ||
-      "Full-stack web developer building fast, reliable products with React, TypeScript, Node.js and PostgreSQL.";
-    const canonicalUrl = new URL(pathname, CANONICAL_ORIGIN).toString();
-    const imageUrl = new URL(
-      options.image || DEFAULT_SOCIAL_IMAGE,
-      CANONICAL_ORIGIN,
-    ).toString();
-    const noIndex =
-      options.noIndex ??
-      (pathname === ADMIN_ROUTE || pathname.startsWith(`${ADMIN_ROUTE}/`));
-    document.title = pageTitle;
-    const setMeta = (selector: string, attribute: "name" | "property", key: string, value: string) => {
-      let element = document.head.querySelector<HTMLMetaElement>(selector);
-      if (!element) { element = document.createElement("meta"); element.setAttribute(attribute, key); document.head.appendChild(element); }
-      element.content = value;
-    };
-    setMeta('meta[name="description"]', "name", "description", pageDescription);
-    setMeta(
-      'meta[name="robots"]',
-      "name",
-      "robots",
-      noIndex ? "noindex, nofollow" : "index, follow, max-image-preview:large",
-    );
-    setMeta('meta[property="og:title"]', "property", "og:title", pageTitle);
-    setMeta('meta[property="og:description"]', "property", "og:description", pageDescription);
-    setMeta(
-      'meta[property="og:type"]',
-      "property",
-      "og:type",
-      options.type ?? "website",
-    );
-    setMeta('meta[property="og:url"]', "property", "og:url", canonicalUrl);
-    setMeta('meta[property="og:image"]', "property", "og:image", imageUrl);
-    setMeta(
-      'meta[property="og:image:alt"]',
-      "property",
-      "og:image:alt",
-      title ? `${title} — ${site.name}` : `${site.name} portfolio`,
-    );
-    setMeta('meta[name="twitter:title"]', "name", "twitter:title", pageTitle);
-    setMeta('meta[name="twitter:description"]', "name", "twitter:description", pageDescription);
-    setMeta('meta[name="twitter:image"]', "name", "twitter:image", imageUrl);
-    setMeta(
-      'meta[name="twitter:image:alt"]',
-      "name",
-      "twitter:image:alt",
-      title ? `${title} — ${site.name}` : `${site.name} portfolio`,
-    );
-    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = canonicalUrl;
-  }, [description, options.image, options.noIndex, options.type, pathname, title]);
-}
 
 export function Back({ to = "/", label }: { to?: string; label: string }) {
   return (

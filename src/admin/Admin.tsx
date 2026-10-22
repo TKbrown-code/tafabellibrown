@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, ArrowLeft, Bot, CalendarDays, Clock3, FileText, FolderKanban, ImagePlus, Inbox, LayoutDashboard, Loader2, LogOut, Menu, Settings, ShieldCheck, Sparkles, UserRound, X } from "lucide-react";
 import { useTheme } from "@/lib/theme";
-import { ThemeToggle, useTitle } from "@/components/shared/Layout";
+import { ThemeToggle } from "@/components/shared/Layout";
 import { fetchAdminApiLogs, fetchAdminNotifications, fetchCurrentAdmin, markAdminNotificationRead, markAllAdminNotificationsRead } from "@/lib/api";
 import { Logo } from "@/components/shared/ui";
 import { defaultSiteSettings, useSiteSettings } from "@/lib/site-settings";
@@ -26,10 +26,6 @@ const SIDEBAR_DEFAULT_WIDTH = 248;
 const SIDEBAR_WIDTH_KEY = "admin-sidebar-width";
 
 export default function Admin() {
-  useTitle("Admin dashboard", "Private portfolio administration.", {
-    noIndex: true,
-  });
-
   const auth = useAuth();
   const qc = useQueryClient();
   const { showModal } = useModal();
@@ -191,7 +187,6 @@ export default function Admin() {
     }
   };
   const chatActive = tab === "beari-chat";
-  useEffect(() => { document.title = "Admin | Tafa Belli Brown"; }, []);
 
   if (!auth.ready) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-faint" /></div>;
   if (!auth.user) return <Login onSignIn={auth.signIn} onRequestSignInLink={auth.requestSignInLink} />;
