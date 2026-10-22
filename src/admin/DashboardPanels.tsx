@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, ArrowRight, BarChart3, Bot, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Cpu, MessageSquare, Pencil, Plus, Save, Server, ShieldCheck, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
-import { createCalendarTask, deleteAdminAccount, deleteCalendarTask, fetchAdminAccounts, fetchAdminAnalytics, fetchAdminApiMetrics, fetchAdminSystem, fetchCalendarTasks, getBeariEmailStatus, inviteAdminAccount, suggestCalendarTask, updateAdminAccount, updateCalendarTask, type AdminAccount, type CalendarTask } from "@/lib/api";
+import { clearAdminVisitorAnalytics, clearAdminVisitorFeedback, createCalendarTask, deleteAdminAccount, deleteCalendarTask, fetchAdminAccounts, fetchAdminAnalytics, fetchAdminApiMetrics, fetchAdminSystem, fetchAdminVisitorFeedback, fetchCalendarTasks, getBeariEmailStatus, inviteAdminAccount, suggestCalendarTask, updateAdminAccount, updateCalendarTask, type AdminAccount, type AdminBeariFeedback, type AdminVisitorVisit, type CalendarTask } from "@/lib/api";
 import type { AdminNotification } from "./CommunicationPanels";
 import { Field, Panel } from "./shared";
 import { safeStorage } from "@/lib/storage";
 import { useModal } from "@/hooks/useModal";
 
-export function OverviewPanel({ notifications, onLoadMoreActivities, hasMoreActivities, isLoadingMoreActivities, onOpenCalendar, onOpenApiLogs, onSelectActivity }: { notifications: AdminNotification[]; onLoadMoreActivities: () => void; hasMoreActivities: boolean; isLoadingMoreActivities: boolean; onOpenCalendar: () => void; onOpenApiLogs: () => void; onSelectActivity: (notification: AdminNotification) => void }) {
+export function OverviewPanel({ notifications, onLoadMoreActivities, hasMoreActivities, isLoadingMoreActivities, onOpenCalendar, onOpenApiLogs, onSelectActivity, onClearActivities, clearActivitiesPending }: { notifications: AdminNotification[]; onLoadMoreActivities: () => void; hasMoreActivities: boolean; isLoadingMoreActivities: boolean; onOpenCalendar: () => void; onOpenApiLogs: () => void; onSelectActivity: (notification: AdminNotification) => void; onClearActivities: () => void; clearActivitiesPending: boolean }) {
+  const qc = useQueryClient();
+  const { showModal } = useModal();
   const [analyticsOptOut, setAnalyticsOptOut] = useState(() => safeStorage.get("portfolio-analytics-opt-out") === "true");
   const [showAllActivities, setShowAllActivities] = useState(false);
   const analytics = useQuery({ queryKey: ["admin-analytics", 30], queryFn: () => fetchAdminAnalytics(30), refetchInterval: 60_000 });
+  const feedbackQuery = useQuery({ queryKey: ["admin-visitor-feedback"], queryFn: fetchAdminVisitorFeedback, refetchInterval: 60_000 });
+  const clearVisits = useMutation({ mutationFn: clearAdminVisitorAnalytics, onSuccess: (count) => { showModal({ type: "success", title: "Visitor history cleared", description: `${count} page-view records were deleted.` }); void qc.invalidateQueries({ queryKey: ["admin-analytics"] }); }, onError: (error) => showModal({ type: "error", title: "Could not clear visitor history", description: (error as Error).message || "Please try again." }) });
+  const clearFeedback = useMutation({ mutationFn: clearAdminVisitorFeedback, onSuccess: (count) => { showModal({ type: "success", title: "Beari feedback cleared", description: `${count} feedback entr${count === 1 ? "y was" : "ies were"} deleted.` }); void qc.invalidateQueries({ queryKey: ["admin-visitor-feedback"] }); }, onError: (error) => showModal({ type: "error", title: "Could not clear Beari feedback", description: (error as Error).message || "Please try again." }) });
   const system = useQuery({ queryKey: ["admin-system"], queryFn: fetchAdminSystem, refetchInterval: 30_000 });
   const apiMetrics = useQuery({ queryKey: ["admin-api-log-metrics"], queryFn: fetchAdminApiMetrics, refetchInterval: 60_000 });
   const tasksQuery = useQuery({ queryKey: ["admin-calendar-tasks"], queryFn: fetchCalendarTasks, refetchInterval: 60_000 });
@@ -102,6 +107,17 @@ export function OverviewPanel({ notifications, onLoadMoreActivities, hasMoreActi
       <section className="card min-h-64 min-w-0 overflow-hidden p-4 sm:p-5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><h2 className="font-semibold">Visitors</h2><p className="text-xs text-muted">Daily page views, past 30 days</p></div><BarChart3 className="h-5 w-5 shrink-0 text-sky-300" /></div>{analytics.isLoading ? <div className="mt-8 h-36 animate-pulse rounded-xl bg-surface-2" /> : daily.length ? <div className="mt-5 min-w-0 overflow-hidden" role="img" aria-label="Daily page views over the last 30 days"><svg className="block h-40 w-full max-w-full" viewBox="0 0 720 160" preserveAspectRatio="none"><g aria-hidden="true" stroke="hsl(var(--border))" strokeDasharray="3 5"><line x1="42" y1="12" x2="712" y2="12"/><line x1="42" y1="52" x2="712" y2="52"/><line x1="42" y1="92" x2="712" y2="92"/><line x1="42" y1="132" x2="712" y2="132"/></g><g fill="hsl(var(--faint))" fontSize="10" fontFamily="ui-monospace, monospace" textAnchor="end"><text x="36" y="15">{max}</text><text x="36" y="55">{Math.round(max * 2 / 3)}</text><text x="36" y="95">{Math.round(max / 3)}</text><text x="36" y="135">0</text></g>{daily.map((d: { date: string; views: number }, i: number) => { const width = 670 / daily.length; const height = d.views ? Math.max(2, d.views / max * 120) : 0; return <rect key={d.date} x={44 + i * width + width * 0.18} y={132 - height} width={Math.max(2, width * 0.64)} height={height} rx="2" fill="hsl(var(--accent))"><title>{`${d.date}: ${d.views} views`}</title></rect>; })}<g fill="hsl(var(--muted))" fontSize="10" fontFamily="ui-monospace, monospace"><text x="44" y="153">{daily[0]?.date.slice(5)}</text><text x="370" y="153" textAnchor="middle">{daily[Math.floor(daily.length / 2)]?.date.slice(5)}</text><text x="712" y="153" textAnchor="end">{daily[daily.length - 1]?.date.slice(5)}</text></g></svg><div className="mt-2 flex flex-wrap items-start justify-between gap-2 border-t border-border pt-2"><p className="text-[11px] text-muted">Your visits are {analyticsOptOut ? "excluded from" : "included in"} these metrics.</p><button type="button" className="text-left text-[11px] font-medium text-accent hover:underline" onClick={() => { const next = !analyticsOptOut; safeStorage.set("portfolio-analytics-opt-out", String(next)); setAnalyticsOptOut(next); }}>{analyticsOptOut ? "Include this browser" : "Exclude this browser"}</button></div></div> : <p className="mt-8 text-center text-sm text-muted">Traffic metrics will appear here as visitors browse the site.</p>}</section>
       <section className="card min-w-0 p-4 sm:p-5"><div className="mb-4 flex items-center gap-2"><Cpu className="h-5 w-5 shrink-0 text-indigo-300" /><h2 className="font-semibold">System performance</h2></div><div className="space-y-3 text-sm">{[["Database", s?.database ?? "Checking"], ["Database latency", s?.databaseLatencyMs == null ? "—" : `${s.databaseLatencyMs} ms`], ["API uptime", s?.uptimeSeconds == null ? "—" : `${Math.floor(s.uptimeSeconds / 3600)}h ${Math.floor((s.uptimeSeconds % 3600) / 60)}m`], ["Memory", s?.memoryMb == null ? "—" : `${s.memoryMb} MB RSS`], ["Node", s?.nodeVersion ?? "—"]].map(([k,v]) => <div key={k} className="flex min-w-0 justify-between gap-2 border-b border-border/70 pb-2"><span className="text-muted">{k}</span><span className="max-w-[60%] break-all text-right font-mono text-[10px] sm:text-xs">{v}</span></div>)}</div><p className="mt-3 text-[11px] text-faint">API process metrics; hosting platform metrics remain in the Render dashboard.</p></section>
     </div>
+    <div className="mt-4 grid min-w-0 gap-4 sm:mt-5 sm:gap-5 xl:grid-cols-2">
+      <section className="card min-w-0 p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2"><div><h2 className="font-semibold">Recent visits</h2><p className="text-xs text-muted">Latest page views · last 30 days</p></div><div className="flex items-center gap-2"><button type="button" className="btn-ghost btn-sm text-danger" disabled={clearVisits.isPending || !a?.pageViews} onClick={() => { if (window.confirm("Permanently delete all recorded page views? This also resets visitor counts and the visitor graph.")) clearVisits.mutate(); }}>{clearVisits.isPending ? "Clearing…" : <><Trash2 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Clear</span></>}</button><Users className="h-5 w-5 shrink-0 text-sky-300" /></div></div>
+        {analytics.isLoading ? <p className="py-4 text-sm text-muted">Loading visits…</p> : analytics.isError ? <p className="py-4 text-sm text-danger">Could not load visitor details.</p> : (a?.recentVisits as AdminVisitorVisit[] | undefined)?.length ? <div className="divide-y divide-border">{(a.recentVisits as AdminVisitorVisit[]).slice(0, 12).map((visit, index) => <div key={`${visit.visitedAt}-${index}`} className="flex min-w-0 items-start justify-between gap-3 py-2.5"><div className="min-w-0"><p className="truncate text-sm font-medium">{[visit.city, visit.country].filter(Boolean).join(", ") || "Location unavailable"}</p><p className="mt-0.5 truncate font-mono text-[11px] text-muted">{visit.path} · {visit.deviceType || "device unknown"}</p></div><time className="shrink-0 text-right text-[10px] text-faint" dateTime={visit.visitedAt}>{new Date(visit.visitedAt).toLocaleString()}</time></div>)}</div> : <p className="py-4 text-sm text-muted">No visitor details recorded yet.</p>}
+        <p className="mt-2 border-t border-border pt-2 text-[10px] text-faint">Location is approximate. Raw IP addresses and browser identifiers are not shown here.</p>
+      </section>
+      <section className="card min-w-0 p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2"><div><h2 className="font-semibold">Beari feedback</h2><p className="text-xs text-muted">Latest visitor ratings and comments</p></div><div className="flex items-center gap-2"><button type="button" className="btn-ghost btn-sm text-danger" disabled={clearFeedback.isPending || !feedbackQuery.data?.length} onClick={() => { if (window.confirm("Permanently delete all visitor ratings and feedback comments?")) clearFeedback.mutate(); }}>{clearFeedback.isPending ? "Clearing…" : <><Trash2 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Clear</span></>}</button><Sparkles className="h-5 w-5 shrink-0 text-violet-300" /></div></div>
+        {feedbackQuery.isLoading ? <p className="py-4 text-sm text-muted">Loading feedback…</p> : feedbackQuery.isError ? <p className="py-4 text-sm text-danger">Could not load Beari feedback.</p> : feedbackQuery.data?.length ? <div className="divide-y divide-border">{feedbackQuery.data.slice(0, 12).map((item: AdminBeariFeedback) => <article key={item.id} className="py-3"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-amber-500" aria-label={`${item.rating} out of 5 stars`}>{"★".repeat(item.rating)}{"☆".repeat(5 - item.rating)} <span className="ml-1 font-mono text-xs text-muted">{item.rating}/5</span></p><time className="text-right text-[10px] text-faint" dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time></div><p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted">{item.feedback?.trim() || "No written comment."}</p></article>)}</div> : <p className="py-4 text-sm text-muted">No visitor feedback submitted yet.</p>}
+      </section>
+    </div>
     <div className="mt-4 grid min-w-0 gap-4 sm:mt-5 sm:gap-5 xl:grid-cols-2"><section className="card min-w-0 p-4 sm:p-5"><div className="mb-4 flex items-center gap-2"><Bot className="h-5 w-5 shrink-0 text-violet-300" /><h2 className="font-semibold">Beari performance</h2></div><div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3"><div className="min-w-0 rounded-xl bg-surface-2 p-3 sm:p-4"><p className="break-words font-display text-xl font-bold sm:text-2xl">{a?.beari?.requests ?? "—"}</p><p className="text-xs text-muted">responses · 30 days</p></div><div className="min-w-0 rounded-xl bg-surface-2 p-3 sm:p-4"><p className="break-words font-display text-xl font-bold sm:text-2xl">{a?.beari?.successRate == null ? "—" : `${a.beari.successRate}%`}</p><p className="text-xs text-muted">successful responses</p></div></div></section><section className="card min-w-0 p-4 sm:p-5"><h2 className="mb-3 font-semibold">Popular pages</h2>{a?.popularPages?.length ? a.popularPages.slice(0,5).map((p: { path: string; views: number }) => <div key={p.path} className="flex min-w-0 justify-between gap-2 border-b border-border/70 py-2 text-sm"><span className="min-w-0 truncate text-muted">{p.path}</span><span className="shrink-0 font-mono text-xs">{p.views}</span></div>) : <p className="text-sm text-muted">Your most visited pages will show here.</p>}</section></div>
     <div className="mt-4 grid min-w-0 gap-4 sm:mt-5 sm:gap-5 xl:grid-cols-2">
       <section className="card min-w-0 p-4 sm:p-5">
@@ -112,24 +128,27 @@ export function OverviewPanel({ notifications, onLoadMoreActivities, hasMoreActi
       <section className="card min-w-0 p-4 sm:p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2"><Activity className="h-5 w-5 shrink-0 text-sky-300" /><div className="min-w-0"><h2 className="font-semibold">Recent activity</h2><p className="text-xs text-muted">Messages, visitors, Beari, content, and calendar changes</p></div></div>
-          {(sortedActivities.length > 6 || hasMoreActivities) && (
-            <button
-              type="button"
-              disabled={isLoadingMoreActivities}
-              onClick={() => {
-                if (hasMoreActivities) {
-                  setShowAllActivities(true);
-                  onLoadMoreActivities();
-                } else {
-                  setShowAllActivities((showing) => !showing);
-                }
-              }}
-              className="btn-ghost btn-sm shrink-0"
-            >
-              {isLoadingMoreActivities ? "Loading more…" : hasMoreActivities ? "View more" : showAllActivities ? "Show less" : "View more"}
-              <ArrowRight className={`h-3.5 w-3.5 ${showAllActivities && !hasMoreActivities ? "-rotate-90" : ""}`} />
-            </button>
-          )}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {(sortedActivities.length > 6 || hasMoreActivities) && (
+              <button
+                type="button"
+                disabled={isLoadingMoreActivities}
+                onClick={() => {
+                  if (hasMoreActivities) {
+                    setShowAllActivities(true);
+                    onLoadMoreActivities();
+                  } else {
+                    setShowAllActivities((showing) => !showing);
+                  }
+                }}
+                className="btn-ghost btn-sm"
+              >
+                {isLoadingMoreActivities ? "Loading more…" : hasMoreActivities ? "View more" : showAllActivities ? "Show less" : "View more"}
+                <ArrowRight className={`h-3.5 w-3.5 ${showAllActivities && !hasMoreActivities ? "-rotate-90" : ""}`} />
+              </button>
+            )}
+            {sortedActivities.length > 0 && <button type="button" disabled={clearActivitiesPending} onClick={onClearActivities} className="btn-ghost btn-sm text-danger disabled:cursor-wait disabled:opacity-60" title="Clear recent activity">{clearActivitiesPending ? <Activity className="h-3.5 w-3.5 animate-pulse" /> : <Trash2 className="h-3.5 w-3.5" />}{clearActivitiesPending ? "Clearing…" : <span className="hidden sm:inline">Clear</span>}</button>}
+          </div>
         </div>
         {recentActivities.length ? <div className="divide-y divide-border">{recentActivities.map((item) => <button key={item.id} type="button" onClick={() => onSelectActivity(item)} className="flex min-w-0 w-full items-start gap-2 py-3 text-left hover:bg-surface-2/60 sm:gap-3"><span className="mt-0.5 shrink-0 text-accent">{item.category === "message" ? <MessageSquare className="h-4 w-4" /> : item.category === "beari" ? <Bot className="h-4 w-4" /> : item.category === "feedback" ? <Sparkles className="h-4 w-4" /> : item.category === "visitor" ? <Users className="h-4 w-4" /> : item.category === "calendar" ? <CalendarDays className="h-4 w-4" /> : <Activity className="h-4 w-4" />}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{item.title}</span><span className="mt-1 block truncate text-xs text-muted">{item.body}{item.occurrence_count > 1 ? ` · ${item.occurrence_count} events` : ""}</span></span><time className="max-w-14 shrink-0 text-right font-mono text-[9px] text-faint sm:max-w-none sm:text-[10px]">{new Date(item.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time></button>)}</div> : <p className="py-5 text-center text-sm text-muted">Messages, visitors, Beari, content, and calendar activity will show here.</p>}
       </section>

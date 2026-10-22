@@ -1,0 +1,16 @@
+# Tafa Belli Brown
+
+> Portfolio of Tafa Belli Brown, a full-stack web developer building production web applications with React, TypeScript, Node.js, and PostgreSQL.
+
+## Main pages
+
+- [Home](https://tafabellibrown.vercel.app/): Profile, skills, experience, and contact information.
+- [Projects](https://tafabellibrown.vercel.app/projects): Projects and engineering case studies.
+- [Blog](https://tafabellibrown.vercel.app/blog): Technical articles and development notes.
+- [Services](https://tafabellibrown.vercel.app/services): Web development services.
+
+## Site map
+
+- [XML sitemap](https://tafabellibrown.vercel.app/sitemap.xml)
+
+The production build expands this file with the current published project and article URLs.

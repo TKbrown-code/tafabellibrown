@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { Activity, ArrowLeft, Bot, CalendarDays, Clock3, FileText, FolderKanban, ImagePlus, Inbox, LayoutDashboard, Loader2, LogOut, Menu, Settings, ShieldCheck, Sparkles, UserRound, X } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/shared/Layout";
-import { fetchAdminApiLogs, fetchAdminNotifications, fetchCurrentAdmin, markAdminNotificationRead, markAllAdminNotificationsRead } from "@/lib/api";
+import { clearAdminApiLogs, clearAdminNotifications, fetchAdminApiLogs, fetchAdminNotifications, fetchCurrentAdmin, markAdminNotificationRead, markAllAdminNotificationsRead } from "@/lib/api";
 import { Logo } from "@/components/shared/ui";
 import { defaultSiteSettings, useSiteSettings } from "@/lib/site-settings";
 import { AdminsPanel, CalendarPanel, OverviewPanel } from "./DashboardPanels";
@@ -54,6 +54,8 @@ export default function Admin() {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [apiLogsLive, setApiLogsLive] = useState(false);
   const [markAllPending, setMarkAllPending] = useState(false);
+  const [clearNotificationsPending, setClearNotificationsPending] = useState(false);
+  const [clearLogsPending, setClearLogsPending] = useState(false);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
     const syncViewport = () => {
@@ -177,6 +179,45 @@ export default function Admin() {
       void qc.invalidateQueries({ queryKey: ["admin-notifications"] });
     }
   };
+  const clearNotifications = async () => {
+    if (clearNotificationsPending || notifications.length === 0) return;
+    if (!window.confirm("Clear all notifications and recent activity for every admin? This cannot be undone.")) return;
+    const previous = qc.getQueryData<typeof notificationsQuery.data>(["admin-notifications"]);
+    setClearNotificationsPending(true);
+    qc.setQueryData(["admin-notifications"], (current: typeof notificationsQuery.data) => current ? {
+      ...current,
+      pages: current.pages.map(() => []),
+    } : current);
+    try {
+      const cleared = await clearAdminNotifications();
+      showModal({ type: "success", title: "Notifications cleared", description: `${cleared} notification${cleared === 1 ? "" : "s"} and recent activit${cleared === 1 ? "y" : "ies"} cleared.` });
+    } catch (error) {
+      qc.setQueryData(["admin-notifications"], previous);
+      showModal({ type: "error", title: "Could not clear notifications", description: (error as Error).message || "Please try again." });
+    } finally {
+      setClearNotificationsPending(false);
+      void qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    }
+  };
+  const clearLogs = async () => {
+    if (clearLogsPending || (apiLogsQuery.data?.length ?? 0) === 0) return;
+    if (!window.confirm("Clear API request logs and hide existing blog schedule runs from Latest system activity? Schedule run history will remain available in Blog schedule.")) return;
+    const previous = qc.getQueryData<typeof apiLogsQuery.data>(["admin-api-logs"]);
+    setClearLogsPending(true);
+    qc.setQueryData(["admin-api-logs"], []);
+    try {
+      const cleared = await clearAdminApiLogs();
+      showModal({ type: "success", title: "System activity cleared", description: `${cleared.apiLogsCleared} API log${cleared.apiLogsCleared === 1 ? "" : "s"} cleared and ${cleared.scheduleRunsHidden} older schedule run${cleared.scheduleRunsHidden === 1 ? "" : "s"} hidden here. Full schedule history remains in Blog schedule.` });
+    } catch (error) {
+      qc.setQueryData(["admin-api-logs"], previous);
+      const details = error as { response?: { data?: { message?: string } }; message?: string };
+      showModal({ type: "error", title: "Could not clear API logs", description: details.response?.data?.message || details.message || "Please try again." });
+    } finally {
+      setClearLogsPending(false);
+      void qc.invalidateQueries({ queryKey: ["admin-api-logs"] });
+      void qc.invalidateQueries({ queryKey: ["admin-api-log-metrics"] });
+    }
+  };
   useEffect(() => {
     safeStorage.set(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
   }, [sidebarWidth]);
@@ -187,7 +228,6 @@ export default function Admin() {
     }
   };
   const chatActive = tab === "beari-chat";
-
   if (!auth.ready) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-faint" /></div>;
   if (!auth.user) return <Login onSignIn={auth.signIn} onRequestSignInLink={auth.requestSignInLink} />;
 
@@ -275,13 +315,13 @@ export default function Admin() {
         </div>
       </aside>
       <main className={`mx-auto min-w-0 w-full ${chatActive ? "h-full min-h-0 max-w-none overflow-hidden px-2 py-2 sm:px-4 sm:py-3 md:px-10 md:py-4" : "max-w-7xl px-4 py-6 sm:px-5 sm:py-8 md:px-10 md:py-10"} ${chatActive ? "flex flex-col" : ""}`}>
-        <div className={`${chatActive ? "mb-2 shrink-0 pb-2 sm:mb-3 sm:pb-3" : "mb-8 pb-5"} flex flex-wrap items-center justify-between gap-2 border-b border-border`}><div className={`${chatActive ? "hidden md:block" : "min-w-0"}`}><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">Portfolio control center</p><p className="mt-1 text-sm text-muted">Welcome back, {adminProfile.data?.name || auth.user.email || "Admin"}</p></div><div className="ml-auto flex items-center gap-1.5 sm:gap-2"><button type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Open navigation menu" aria-expanded={mobileMenuOpen} aria-controls="admin-sidebar-navigation" title="Open menu" className="btn-ghost btn-sm md:hidden"><Menu className="h-4 w-4" /><span className="sr-only">Menu</span></button>{chatActive && <button type="button" onClick={() => setTab("overview")} className="btn-ghost btn-sm md:hidden"><LayoutDashboard className="h-3.5 w-3.5" /><span>Dashboard</span></button>}<Link to="/" aria-label="Home" onClick={() => setMobileMenuOpen(false)} className="btn-ghost btn-sm" data-testid="link-admin-home"><ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Home</span></Link><NotificationsMenu notifications={menuNotifications} unreadCount={unread} isLive={realtimeConnected} hasError={notificationsQuery.isError} onSelect={selectNotification} onMarkAll={markAllNotificationsRead} markAllPending={markAllPending} /><ThemeToggle /><button type="button" onClick={() => { setTab("profile"); setMobileMenuOpen(false); }} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open my profile" title="My profile"><img src={profileSettings.profileImageUrl} alt="My profile" className="h-9 w-9 rounded-full border border-border object-cover" /></button></div></div>
-        {tab === "overview" && <OverviewPanel notifications={notifications} onLoadMoreActivities={() => void notificationsQuery.fetchNextPage()} hasMoreActivities={Boolean(notificationsQuery.hasNextPage)} isLoadingMoreActivities={notificationsQuery.isFetchingNextPage} onOpenCalendar={() => setTab("calendar")} onOpenApiLogs={() => setTab("api-logs")} onSelectActivity={selectNotification} />}
+        <div className={`${chatActive ? "mb-2 shrink-0 pb-2 sm:mb-3 sm:pb-3" : "mb-8 pb-5"} flex flex-wrap items-center justify-between gap-2 border-b border-border`}><div className={`${chatActive ? "hidden md:block" : "min-w-0"}`}><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">Portfolio control center</p><p className="mt-1 text-sm text-muted">Welcome back, {adminProfile.data?.name || auth.user.email || "Admin"}</p></div><div className="ml-auto flex items-center gap-1.5 sm:gap-2"><button type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Open navigation menu" aria-expanded={mobileMenuOpen} aria-controls="admin-sidebar-navigation" title="Open menu" className="btn-ghost btn-sm md:hidden"><Menu className="h-4 w-4" /><span className="sr-only">Menu</span></button>{chatActive && <button type="button" onClick={() => setTab("overview")} className="btn-ghost btn-sm md:hidden"><LayoutDashboard className="h-3.5 w-3.5" /><span>Dashboard</span></button>}<Link to="/" aria-label="Home" onClick={() => setMobileMenuOpen(false)} className="btn-ghost btn-sm" data-testid="link-admin-home"><ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Home</span></Link><NotificationsMenu notifications={menuNotifications} unreadCount={unread} isLive={realtimeConnected} hasError={notificationsQuery.isError} onSelect={selectNotification} onMarkAll={markAllNotificationsRead} markAllPending={markAllPending} onClear={clearNotifications} clearPending={clearNotificationsPending} /><ThemeToggle /><button type="button" onClick={() => { setTab("profile"); setMobileMenuOpen(false); }} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open my profile" title="My profile"><img src={profileSettings.profileImageUrl} alt="My profile" className="h-9 w-9 rounded-full border border-border object-cover" /></button></div></div>
+        {tab === "overview" && <OverviewPanel notifications={notifications} onLoadMoreActivities={() => void notificationsQuery.fetchNextPage()} hasMoreActivities={Boolean(notificationsQuery.hasNextPage)} isLoadingMoreActivities={notificationsQuery.isFetchingNextPage} onOpenCalendar={() => setTab("calendar")} onOpenApiLogs={() => setTab("api-logs")} onSelectActivity={selectNotification} onClearActivities={clearNotifications} clearActivitiesPending={clearNotificationsPending} />}
         {tab === "calendar" && <CalendarPanel adminEmail={auth.user.email ?? ""} />}
         {tab === "settings" && <SettingsPanel />}
         {tab === "profile" && <ProfilePanel profile={adminProfile.data} onProfileUpdated={(updated) => { qc.setQueryData(["current-admin", authUserId], updated); void qc.invalidateQueries({ queryKey: ["current-admin"] }); }} />}
         {tab === "messages" && <MessagesPanel initialMessageId={selectedMessageId} />}
-        {tab === "api-logs" && <ApiLogsPanel logs={apiLogsQuery.data ?? []} isLive={apiLogsLive} isLoading={apiLogsQuery.isFetching} hasError={apiLogsQuery.isError} onRefresh={() => void apiLogsQuery.refetch()} />}
+        {tab === "api-logs" && <ApiLogsPanel logs={apiLogsQuery.data ?? []} isLive={apiLogsLive} isLoading={apiLogsQuery.isFetching} hasError={apiLogsQuery.isError} onRefresh={() => void apiLogsQuery.refetch()} onClear={() => void clearLogs()} clearPending={clearLogsPending} />}
         {tab === "projects" && <ProjectsPanel />}
         {tab === "posts" && <PostsPanel />}
         {tab === "blog-schedule" && isSuperAdmin && <BlogAutomationPanel />}

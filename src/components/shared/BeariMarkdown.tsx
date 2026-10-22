@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Download, X } from "lucide-react";
+import { Download, FileText, X } from "lucide-react";
 
 /**
  * Removes leftover "**" markers that cannot be paired on a line, so a model
@@ -18,6 +18,43 @@ export function cleanMarkdown(text: string): string {
 }
 
 const HOME_SECTIONS = new Set(["about", "skills", "projects", "services", "experience", "blog", "contact"]);
+
+export function DocumentAttachment({ name, url, downloadUrl, previewPdf = false, previewUrl }: { name: string; url: string; downloadUrl: string; previewPdf?: boolean; previewUrl?: string }) {
+  return (
+    <div className="my-3 w-fit max-w-full overflow-hidden rounded-xl border border-border bg-surface text-ink">
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block w-fit max-w-full no-underline" aria-label={`Preview ${name}`}>
+        {previewUrl
+          ? <img src={previewUrl} alt={`${name} preview`} loading="lazy" className="h-44 w-[min(78vw,300px)] bg-surface-2 object-cover object-top" />
+          : previewPdf
+            ? <span aria-hidden="true" className="block h-44 w-[min(78vw,300px)] overflow-hidden bg-surface-2">
+                <iframe
+                  title={`${name} preview`}
+                  src={`${url}${url.includes("#") ? "&" : "#"}toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
+                  loading="lazy"
+                  scrolling="no"
+                  tabIndex={-1}
+                  className="pointer-events-none h-44 w-[calc(100%+20px)] border-0 bg-surface-2"
+                />
+              </span>
+            : <span className="grid h-44 w-[min(78vw,300px)] place-items-center bg-surface-2 text-accent"><FileText className="h-12 w-12" aria-hidden="true" /></span>}
+      </a>
+      <div className="flex min-w-0 items-center justify-between gap-3 border-t border-border px-3 py-2">
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4 shrink-0 text-accent" /><span className="truncate">{name}</span></span>
+        <a href={downloadUrl} download className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs font-medium text-accent transition-colors hover:border-accent/40" aria-label={`Download ${name}`} title={`Download ${name}`}>
+          <Download className="h-3.5 w-3.5" />
+          Download
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function pdfDownloadUrl(target: URL) {
+  const resumeFile = target.pathname.match(/\/resume\/([0-9a-f-]{36}\.pdf)$/i)?.[1];
+  return resumeFile
+    ? `/api/documents/resume/${encodeURIComponent(resumeFile)}?download=1`
+    : target.href;
+}
 
 function MarkdownImage({ src, alt }: { src?: string; alt?: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -78,6 +115,16 @@ function MarkdownLink({ href, children }: { href?: string; children?: ReactNode 
     target = new URL(href, window.location.href);
   } catch {
     return <>{children}</>;
+  }
+
+  if (target.pathname.toLowerCase().endsWith(".pdf")) {
+    let fileName = target.pathname.split("/").pop() || "Résumé PDF";
+    try {
+      fileName = decodeURIComponent(fileName);
+    } catch {
+      fileName = "Résumé PDF";
+    }
+    return <DocumentAttachment name={String(children ?? fileName)} url={target.href} downloadUrl={pdfDownloadUrl(target)} />;
   }
 
   const internal = href.startsWith("/") || target.origin === window.location.origin;
