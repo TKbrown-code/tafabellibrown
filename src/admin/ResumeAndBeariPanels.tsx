@@ -31,6 +31,25 @@ function adminChatErrorMessage(error: unknown) {
   return value.response?.data?.message || value.message || "Please try again.";
 }
 
+function resumeFileFromSettings(settings?: { resumeUrl?: string; resumeThumbnailUrl?: string }) {
+  if (!settings?.resumeUrl) return undefined;
+  try {
+    const url = new URL(settings.resumeUrl, window.location.origin);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+    const key = url.pathname.match(/(?:^|\/)(resume\/[0-9a-f-]{36}\.pdf)$/i)?.[1];
+    const apiPath = url.pathname.match(/^\/api\/documents\/(resume\/[0-9a-f-]{36}\.pdf)$/i)?.[1] ?? key;
+    return {
+      name: "Résumé PDF",
+      url: url.href,
+      downloadUrl: apiPath ? `/api/documents/${apiPath.split("/").map(encodeURIComponent).join("/")}?download=1` : url.href,
+      previewPdf: true,
+      ...(settings.resumeThumbnailUrl ? { previewUrl: settings.resumeThumbnailUrl } : {}),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 function chooseBeariVoice(voices: SpeechSynthesisVoice[], language: string) {
   const baseLanguage = language.split("-")[0].toLowerCase();
   const matching = voices.filter((voice) => voice.lang.toLowerCase() === language.toLowerCase());
@@ -81,12 +100,14 @@ export function AdminAssistantPanel({ adminName = "there", adminId = "" }: { adm
   const [speaking, setSpeaking] = useState(false);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [mascotMood, setMascotMood] = useState<BeariState>("idle");
+  const resumeAttachmentIntent = useRef(false);
   const retryRequests = useRef(new Map<string, { message: string; context?: string; image?: File; imagePath?: string; imageUrl?: string; messageId: string; localPreviewUrl?: string }>());
   const previewUrls = useRef(new Set<string>());
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const speechRunRef = useRef(0);
   const history = useQuery({ queryKey: ["admin-assistant-history", adminId], queryFn: fetchAdminAssistantHistory, enabled: Boolean(adminId) });
   const assistantSettings = useQuery({ queryKey: ["assistant-settings", adminId], queryFn: getAssistantSettings, enabled: Boolean(adminId) });
+  const resumeSettings = useQuery({ queryKey: ["admin-site-settings"], queryFn: fetchAdminSiteSettings, enabled: Boolean(adminId) });
   useEffect(() => {
     setItems([]);
     previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
@@ -100,7 +121,25 @@ export function AdminAssistantPanel({ adminName = "there", adminId = "" }: { adm
     window.speechSynthesis.addEventListener("voiceschanged", updateVoice);
     return () => window.speechSynthesis.removeEventListener("voiceschanged", updateVoice);
   }, []);
-  useEffect(() => { if (history.data) setItems(history.data.map((item, index) => ({ ...item, id: `history-${index}-${item.role}`, content: normalizeChatText(item.content) }))); }, [history.data]);
+  useEffect(() => {
+    if (history.data) setItems(history.data.map((item, index) => ({ ...item, id: `history-${index}-${item.role}`, content: normalizeChatText(item.content) })));
+  }, [history.data]);
+  useEffect(() => {
+    const resumeAttachment = resumeFileFromSettings(resumeSettings.data as { resumeUrl?: string; resumeThumbnailUrl?: string } | undefined);
+    if (!resumeAttachment) return;
+    setItems((current) => {
+      let resumeIntent = false;
+      return current.map((item) => {
+        if (item.role === "user") {
+          if (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(item.content)) resumeIntent = true;
+          else if (!/^(?:(?:please\s+)?(?:try|do)\s+again|again|fetch it|download it|send it|give it to me|provide it|attach it)[.!\s]*$/i.test(item.content.trim())) resumeIntent = false;
+        }
+        return !item.fileAttachment && item.role === "assistant" && resumeIntent
+          ? { ...item, fileAttachment: resumeAttachment }
+          : item;
+      });
+    });
+  }, [history.data, resumeSettings.data]);
   useEffect(() => () => {
     speechRunRef.current += 1;
     recognitionRef.current?.stop();
@@ -167,7 +206,15 @@ export function AdminAssistantPanel({ adminName = "there", adminId = "" }: { adm
         previewUrls.current.delete(input.localPreviewUrl);
         URL.revokeObjectURL(input.localPreviewUrl);
       }
-      setItems((old) => [...old, { id: `reply-${Date.now()}`, role: "assistant", content: normalizeChatText(data.answer) }]);
+      const fileAttachment = data.fileAttachment ?? (resumeAttachmentIntent.current
+        ? resumeFileFromSettings(resumeSettings.data as { resumeUrl?: string; resumeThumbnailUrl?: string } | undefined)
+        : undefined);
+      setItems((old) => [...old, {
+        id: `reply-${Date.now()}`,
+        role: "assistant",
+        content: normalizeChatText(data.answer),
+        ...(fileAttachment ? { fileAttachment } : {}),
+      }]);
       if (voiceReply) speak(data.answer);
       else { setMascotMood("happy"); window.setTimeout(() => setMascotMood("idle"), 1400); }
     },
@@ -199,6 +246,10 @@ export function AdminAssistantPanel({ adminName = "there", adminId = "" }: { adm
   const handleSend = (raw: string, context?: string, image?: File) => {
     const text = raw.trim();
     if ((!text && !image) || send.isPending) return;
+    const asksForResume = /\b(resume|résumé|cv|curriculum vitae)\b/i.test(text);
+    const isResumeFollowUp = /^(?:(?:please\s+)?(?:try|do)\s+again|again|fetch it|download it|send it|give it to me|provide it|attach it)[.!\s]*$/i.test(text);
+    if (asksForResume) resumeAttachmentIntent.current = true;
+    else if (!isResumeFollowUp) resumeAttachmentIntent.current = false;
     const imagePreview = image ? URL.createObjectURL(image) : undefined;
     if (imagePreview) previewUrls.current.add(imagePreview);
     const messageId = `message-${crypto.randomUUID()}`;

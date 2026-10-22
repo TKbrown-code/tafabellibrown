@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ArrowUpRight, Copy, ImagePlus, RotateCcw, Send, Sparkles, Volume2, X } from "lucide-react";
-import { BeariMarkdown } from "@/components/shared/BeariMarkdown";
+import { BeariMarkdown, DocumentAttachment } from "@/components/shared/BeariMarkdown";
 
 export interface AdminChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   imagePreview?: string;
+  fileAttachment?: { name: string; url: string; downloadUrl: string; previewPdf?: boolean; previewUrl?: string };
   retryable?: boolean;
 }
 
@@ -219,6 +220,7 @@ export function AdminChat({
                 <div className="min-w-0 max-w-full flex-1">
                   <div className="min-w-0 max-w-full break-words px-3 py-3 sm:px-4">
                     <BeariMarkdown allowImages className="text-ink">{m.content}</BeariMarkdown>
+                    {m.fileAttachment && <DocumentAttachment {...m.fileAttachment} />}
                   </div>
                   {latestMessage?.id === m.id && <div className="mt-1 flex items-center gap-1">
                     {m.retryable && onRetry ? (

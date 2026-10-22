@@ -40,7 +40,46 @@ const sitemap = [
   '',
 ].join("\n");
 await writeFile(resolve(dist, "sitemap.xml"), sitemap, "utf8");
-await writeFile(resolve(dist, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: ${adminRoute}\n\nSitemap: ${origin}/sitemap.xml\n`, "utf8");
+const discoveryAgents = ["OAI-SearchBot", "ChatGPT-User", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User"];
+const robots = [
+  "User-agent: *",
+  "Allow: /",
+  `Disallow: ${adminRoute}`,
+  ...discoveryAgents.flatMap((agent) => ["", `User-agent: ${agent}`, "Allow: /", `Disallow: ${adminRoute}`]),
+  "",
+  `Sitemap: ${origin}/sitemap.xml`,
+  "",
+].join("\n");
+await writeFile(resolve(dist, "robots.txt"), robots, "utf8");
+
+const link = (path, label) => `- [${label}](${origin}${path})`;
+const clean = (value) => String(value || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+const llms = [
+  "# Tafa Belli Brown",
+  "",
+  "> Portfolio of Tafa Belli Brown, a full-stack web developer building production web applications with React, TypeScript, Node.js, and PostgreSQL.",
+  "",
+  "## Main pages",
+  "",
+  link("/", "Home: profile, skills, experience, and contact information"),
+  link("/projects", "Projects and engineering case studies"),
+  link("/blog", "Technical articles and development notes"),
+  link("/services", "Web development services"),
+  "",
+  "## Projects",
+  "",
+  ...content.projects.map((item) => `${link(`/projects/${encodeURIComponent(item.slug)}`, clean(item.title))}${item.description ? ` — ${clean(item.description)}` : ""}`),
+  "",
+  "## Articles",
+  "",
+  ...content.posts.map((item) => `${link(`/blog/${encodeURIComponent(item.slug)}`, clean(item.title))}${item.excerpt ? ` — ${clean(item.excerpt)}` : ""}`),
+  "",
+  "## Optional",
+  "",
+  `- [XML sitemap](${origin}/sitemap.xml)`,
+  "",
+].join("\n");
+await writeFile(resolve(dist, "llms.txt"), llms, "utf8");
 
 const titles = new Set();
 const descriptions = new Set();
